@@ -1,0 +1,160 @@
+[2026-06-09 17:45:37] INFO: SessionManager initialized
+[2026-06-09 17:45:37] INFO: LoginFrame initialized
+[2026-06-09 17:46:10] INFO: Authentication successful for user: ben
+[2026-06-09 17:46:10] INFO: User logged in - Username: ben, Role: Guest
+[2026-06-09 17:46:39] INFO: SessionManager initialized
+[2026-06-09 17:46:39] INFO: LoginFrame initialized
+[2026-06-09 17:46:50] INFO: SessionManager initialized
+[2026-06-09 17:46:50] INFO: LoginFrame initialized
+[2026-06-09 17:50:09] INFO: SessionManager initialized
+[2026-06-09 17:50:09] INFO: LoginFrame initialized
+[2026-06-09 18:22:42] INFO: Application closed by user
+[2026-06-09 18:27:47] INFO: SessionManager initialized
+[2026-06-09 18:27:47] INFO: LoginFrame initialized
+[2026-06-09 18:31:35] INFO: SessionManager initialized
+[2026-06-09 18:31:36] INFO: LoginFrame initialized
+[2026-06-09 18:31:49] INFO: Authentication successful for user: dasdsaa
+[2026-06-09 18:31:49] INFO: User logged in - Username: dasdsaa, Role: Receptionist
+[2026-06-09 18:31:49] INFO: ReceptionMainWindow opened
+[2026-06-09 18:32:46] INFO: SessionManager initialized
+[2026-06-09 18:32:46] INFO: LoginFrame initialized
+[2026-06-09 18:32:50] INFO: Authentication successful for user: asdsadas
+[2026-06-09 18:32:50] INFO: User logged in - Username: asdsadas, Role: Guest
+[2026-06-11 03:08:15] INFO: SessionManager initialized
+[2026-06-11 03:08:15] INFO: LoginFrame initialized
+[2026-06-11 03:26:24] INFO: SessionManager initialized
+[2026-06-11 03:26:24] INFO: LoginFrame initialized
+[2026-06-11 03:53:49] INFO: SessionManager initialized
+[2026-06-11 03:53:49] INFO: LoginFrame initialized with registration support
+[2026-06-11 03:53:52] INFO: Opening registration frame
+[2026-06-11 03:53:52] INFO: RegistrationFrame initialized
+[2026-06-11 03:57:54] INFO: SessionManager initialized
+[2026-06-11 03:57:54] INFO: LoginFrame initialized with registration support
+[2026-06-11 03:57:56] INFO: Opening registration frame
+[2026-06-11 03:57:56] INFO: RegistrationFrame initialized
+[2026-06-11 04:18:52] INFO: SessionManager initialized
+[2026-06-11 04:18:52] INFO: LoginFrame initialized with registration support
+[2026-06-11 04:18:55] INFO: Opening registration frame
+[2026-06-11 04:18:55] INFO: RegistrationFrame initialized
+[2026-06-11 04:21:29] INFO: SessionManager initialized
+[2026-06-11 04:21:29] INFO: LoginFrame initialized with registration support
+[2026-06-11 04:21:31] INFO: Opening registration frame
+[2026-06-11 04:21:31] INFO: RegistrationFrame initialized
+[2026-06-11 04:22:12] INFO: SessionManager initialized
+[2026-06-11 04:22:12] INFO: LoginFrame initialized with registration support
+[2026-06-11 04:22:13] INFO: Opening registration frame
+[2026-06-11 04:22:13] INFO: RegistrationFrame initialized
+[2026-06-11 04:22:16] WARN: Registration validation failed - Empty fields
+[2026-06-11 04:22:28] INFO: SessionManager initialized
+[2026-06-11 04:22:28] INFO: LoginFrame initialized with registration support
+[2026-06-11 04:22:29] INFO: Opening registration frame
+[2026-06-11 04:22:29] INFO: RegistrationFrame initialized
+[2026-06-11 04:23:13] WARN: Registration validation failed - Password too short
+[2026-06-11 04:23:22] INFO: Default users initialized
+[2026-06-11 04:23:22] INFO: RegistrationManager initialized
+[2026-06-11 04:23:22] INFO: New user registered successfully - Username: bene1, UserID: REC_0002, Role: Receptionist
+[2026-06-11 04:23:24] INFO: New user registered: bene1
+[2026-06-11 04:25:22] INFO: SessionManager initialized
+[2026-06-11 04:25:23] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:25:28] WARN: Login attempt with empty credentials
+[2026-06-11 04:25:29] INFO: Opening registration frame
+[2026-06-11 04:25:29] INFO: RegistrationFrame initialized
+[2026-06-11 04:25:55] INFO: Default users initialized
+[2026-06-11 04:25:55] INFO: RegistrationManager initialized
+[2026-06-11 04:25:55] INFO: New user registered successfully - Username: aeqhehq, UserID: GUE_0002, Role: Guest
+[2026-06-11 04:25:58] INFO: New user registered: aeqhehq
+[2026-06-11 04:26:12] INFO: Opening registration frame
+[2026-06-11 04:26:12] INFO: RegistrationFrame initialized
+[2026-06-11 04:26:40] INFO: New user registered successfully - Username: mrbenedict, UserID: GUE_0003, Role: Guest
+[2026-06-11 04:26:43] INFO: New user registered: mrbenedict
+[2026-06-11 04:26:51] INFO: User authenticated successfully: mrbenedict
+[2026-06-11 04:26:51] INFO: Authentication successful for user: mrbenedict
+[2026-06-11 04:26:51] INFO: User logged in - ID: GUE_0003, Username: mrbenedict, Role: Guest
+[2026-06-11 04:26:51] INFO: User login successful: mrbenedict [Guest]
+[2026-06-11 04:40:10] INFO: SessionManager initialized
+[2026-06-11 04:40:10] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:40:28] INFO: Default users initialized
+[2026-06-11 04:40:28] INFO: RegistrationManager initialized
+[2026-06-11 04:40:28] INFO: User authenticated successfully: admin
+[2026-06-11 04:40:28] INFO: Authentication successful for user: admin
+[2026-06-11 04:40:28] INFO: User logged in - ID: ADMIN_001, Username: admin, Role: Admin
+[2026-06-11 04:40:28] INFO: User login successful: admin [Admin]
+[2026-06-11 04:40:28] INFO: GuestManager initialized
+[2026-06-11 04:40:28] INFO: RoomManager initialized
+[2026-06-11 04:40:28] INFO: ReservationManager initialized
+[2026-06-11 04:40:28] INFO: PaymentManager initialized
+[2026-06-11 04:40:28] INFO: AdminDashboardMain opened
+[2026-06-11 04:40:57] INFO: Database backup initiated
+[2026-06-11 04:40:58] INFO: System logs requested
+[2026-06-11 04:41:07] INFO: SessionManager initialized
+[2026-06-11 04:41:07] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:41:20] INFO: Default users initialized
+[2026-06-11 04:41:20] INFO: RegistrationManager initialized
+[2026-06-11 04:41:20] INFO: User authenticated successfully: admin
+[2026-06-11 04:41:20] INFO: Authentication successful for user: admin
+[2026-06-11 04:41:20] INFO: User logged in - ID: ADMIN_001, Username: admin, Role: Admin
+[2026-06-11 04:41:20] INFO: User login successful: admin [Admin]
+[2026-06-11 04:41:20] INFO: GuestManager initialized
+[2026-06-11 04:41:20] INFO: RoomManager initialized
+[2026-06-11 04:41:20] INFO: ReservationManager initialized
+[2026-06-11 04:41:20] INFO: PaymentManager initialized
+[2026-06-11 04:41:20] INFO: AdminDashboardMain opened
+[2026-06-11 04:41:30] INFO: Database backup initiated
+[2026-06-11 04:41:31] INFO: System logs requested
+[2026-06-11 04:42:28] INFO: SessionManager initialized
+[2026-06-11 04:42:28] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:42:47] INFO: Default users initialized
+[2026-06-11 04:42:47] INFO: RegistrationManager initialized
+[2026-06-11 04:42:47] INFO: User authenticated successfully: guest
+[2026-06-11 04:42:47] INFO: Authentication successful for user: guest
+[2026-06-11 04:42:47] INFO: User logged in - ID: GUEST_001, Username: guest, Role: Guest
+[2026-06-11 04:42:47] INFO: User login successful: guest [Guest]
+[2026-06-11 04:43:47] INFO: SessionManager initialized
+[2026-06-11 04:43:47] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:44:07] INFO: Default users initialized
+[2026-06-11 04:44:07] INFO: RegistrationManager initialized
+[2026-06-11 04:44:07] INFO: User authenticated successfully: receptionist
+[2026-06-11 04:44:07] INFO: Authentication successful for user: receptionist
+[2026-06-11 04:44:07] INFO: User logged in - ID: REC_001, Username: receptionist, Role: Receptionist
+[2026-06-11 04:44:07] INFO: User login successful: receptionist [Receptionist]
+[2026-06-11 04:44:07] INFO: ReceptionMainWindow opened
+[2026-06-11 04:45:20] INFO: SessionManager initialized
+[2026-06-11 04:45:20] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:45:29] INFO: Default users initialized
+[2026-06-11 04:45:29] INFO: RegistrationManager initialized
+[2026-06-11 04:45:29] INFO: User authenticated successfully: guest
+[2026-06-11 04:45:29] INFO: Authentication successful for user: guest
+[2026-06-11 04:45:29] INFO: User logged in - ID: GUEST_001, Username: guest, Role: Guest
+[2026-06-11 04:45:29] INFO: User login successful: guest [Guest]
+[2026-06-11 04:49:56] INFO: SessionManager initialized
+[2026-06-11 04:49:56] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 04:50:06] INFO: Default users initialized
+[2026-06-11 04:50:06] INFO: RegistrationManager initialized
+[2026-06-11 04:50:06] INFO: User authenticated successfully: guest
+[2026-06-11 04:50:06] INFO: Authentication successful for user: guest
+[2026-06-11 04:50:06] INFO: User logged in - ID: GUEST_001, Username: guest, Role: Guest
+[2026-06-11 04:50:06] INFO: User login successful: guest [Guest]
+[2026-06-11 05:03:07] INFO: SessionManager initialized
+[2026-06-11 05:03:07] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 05:03:15] INFO: Default users initialized
+[2026-06-11 05:03:15] INFO: RegistrationManager initialized
+[2026-06-11 05:03:15] INFO: User authenticated successfully: admin
+[2026-06-11 05:03:15] INFO: Authentication successful for user: admin
+[2026-06-11 05:03:15] INFO: User logged in - ID: ADMIN_001, Username: admin, Role: Admin
+[2026-06-11 05:03:15] INFO: User login successful: admin [Admin]
+[2026-06-11 05:03:42] INFO: SessionManager initialized
+[2026-06-11 05:03:42] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 05:03:53] INFO: Default users initialized
+[2026-06-11 05:03:53] INFO: RegistrationManager initialized
+[2026-06-11 05:03:53] INFO: User authenticated successfully: receptionist
+[2026-06-11 05:03:53] INFO: Authentication successful for user: receptionist
+[2026-06-11 05:03:53] INFO: User logged in - ID: REC_001, Username: receptionist, Role: Receptionist
+[2026-06-11 05:03:53] INFO: User login successful: receptionist [Receptionist]
+[2026-06-11 05:04:00] INFO: SessionManager initialized
+[2026-06-11 05:04:01] INFO: UpdatedLoginFrame initialized with registration support
+[2026-06-11 05:04:06] INFO: Default users initialized
+[2026-06-11 05:04:06] INFO: RegistrationManager initialized
+[2026-06-11 05:04:06] INFO: User authenticated successfully: guest
+[2026-06-11 05:04:06] INFO: Authentication successful for user: guest
+[2026-06-11 05:04:06] INFO: User logged in - ID: GUEST_001, Username: guest, Role: Guest
+[2026-06-11 05:04:06] INFO: User login successful: guest [Guest]
