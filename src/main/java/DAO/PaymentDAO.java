@@ -4,29 +4,37 @@ import Config.DBConfig;
 import Models.Payment;
 import Utilities.HotelException;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Payment Data Access Object (DAO)
+ * 
+ * Handles all database operations for Payment entities including recording,
+ * tracking, and refund processing of payments.
+ */
 public class PaymentDAO {
     
-
+    /**
+     * Create a new payment record in the database
+     */
     public int createPayment(Payment payment) throws HotelException {
-        String query = "INSERT INTO payments (reservation_id, payment_amount, payment_method, payment_type_details, " +
-                       "payment_status, payment_date, payment_time, transaction_id) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO payments (reservation_id, payment_amount, payment_method, " +
+                       "payment_type_details, payment_status, payment_date, payment_time, " +
+                       "transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             
             pstmt.setInt(1, payment.getReservationId());
-            pstmt.setBigDecimal(2, payment.getPaymentAmount());
+            pstmt.setBigDecimal(2, new java.math.BigDecimal(payment.getPaymentAmount()));
             pstmt.setString(3, payment.getPaymentMethod());
             pstmt.setString(4, payment.getPaymentTypeDetails());
             pstmt.setString(5, payment.getPaymentStatus());
-            pstmt.setDate(6, payment.getPaymentDate() != null ? java.sql.Date.valueOf(payment.getPaymentDate()) : null);
-            pstmt.setTime(7, payment.getPaymentTime() != null ? java.sql.Time.valueOf(payment.getPaymentTime()) : null);
+            pstmt.setDate(6, payment.getPaymentDate() != null ? 
+                java.sql.Date.valueOf(payment.getPaymentDate()) : null);
+            pstmt.setTime(7, payment.getPaymentTime() != null ? 
+                java.sql.Time.valueOf(payment.getPaymentTime()) : null);
             pstmt.setString(8, payment.getTransactionId());
             
             int affectedRows = pstmt.executeUpdate();
@@ -47,7 +55,9 @@ public class PaymentDAO {
         }
     }
     
-
+    /**
+     * Retrieve payment by payment ID
+     */
     public Payment getPaymentById(int paymentId) throws HotelException {
         String query = "SELECT * FROM payments WHERE payment_id = ?";
         
@@ -67,10 +77,12 @@ public class PaymentDAO {
         return null;
     }
     
-
+    /**
+     * Get all payments for a specific reservation
+     */
     public List<Payment> getPaymentsByReservationId(int reservationId) throws HotelException {
-        List<Payment> payments = new ArrayList<>();
         String query = "SELECT * FROM payments WHERE reservation_id = ? ORDER BY payment_date DESC";
+        List<Payment> payments = new ArrayList<>();
         
         try (Connection conn = DBConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -83,15 +95,61 @@ public class PaymentDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new HotelException("Error retrieving payments by reservation ID: " + e.getMessage(), e);
+            throw new HotelException("Error retrieving payments: " + e.getMessage(), e);
         }
         return payments;
     }
     
-
-    public List<Payment> getPaymentsByStatus(String status) throws HotelException {
+    /**
+     * Get all payments
+     */
+    public List<Payment> getAllPayments() throws HotelException {
+        String query = "SELECT * FROM payments ORDER BY payment_date DESC";
         List<Payment> payments = new ArrayList<>();
+        
+        try (Connection conn = DBConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+            
+            while (rs.next()) {
+                payments.add(mapResultSetToPayment(rs));
+            }
+        } catch (SQLException e) {
+            throw new HotelException("Error retrieving all payments: " + e.getMessage(), e);
+        }
+        return payments;
+    }
+    
+    /**
+     * Update payment record
+     */
+    public boolean updatePayment(Payment payment) throws HotelException {
+        String query = "UPDATE payments SET payment_status = ?, refund_amount = ?, " +
+                       "refund_date = ?, refund_reason = ? WHERE payment_id = ?";
+        
+        try (Connection conn = DBConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            
+            pstmt.setString(1, payment.getPaymentStatus());
+            pstmt.setDouble(2, payment.getRefundAmount());
+            pstmt.setDate(3, payment.getRefundDate() != null ? 
+                java.sql.Date.valueOf(payment.getRefundDate()) : null);
+            pstmt.setString(4, payment.getRefundReason());
+            pstmt.setInt(5, payment.getPaymentId());
+            
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            throw new HotelException("Error updating payment: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Get payments by status
+     */
+    public List<Payment> getPaymentsByStatus(String status) throws HotelException {
         String query = "SELECT * FROM payments WHERE payment_status = ? ORDER BY payment_date DESC";
+        List<Payment> payments = new ArrayList<>();
         
         try (Connection conn = DBConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -109,157 +167,14 @@ public class PaymentDAO {
         return payments;
     }
     
-
-    public List<Payment> getPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
-        List<Payment> payments = new ArrayList<>();
-        String query = "SELECT * FROM payments WHERE payment_date BETWEEN ? AND ? ORDER BY payment_date DESC";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setDate(1, java.sql.Date.valueOf(startDate));
-            pstmt.setDate(2, java.sql.Date.valueOf(endDate));
-            
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    payments.add(mapResultSetToPayment(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new HotelException("Error retrieving payments by date range: " + e.getMessage(), e);
-        }
-        return payments;
-    }
-    
-
-    public boolean updatePayment(Payment payment) throws HotelException {
-        String query = "UPDATE payments SET payment_amount = ?, payment_method = ?, payment_type_details = ?, " +
-                       "payment_status = ?, payment_date = ?, payment_time = ?, transaction_id = ?, updated_at = CURRENT_TIMESTAMP " +
-                       "WHERE payment_id = ?";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setBigDecimal(1, payment.getPaymentAmount());
-            pstmt.setString(2, payment.getPaymentMethod());
-            pstmt.setString(3, payment.getPaymentTypeDetails());
-            pstmt.setString(4, payment.getPaymentStatus());
-            pstmt.setDate(5, payment.getPaymentDate() != null ? java.sql.Date.valueOf(payment.getPaymentDate()) : null);
-            pstmt.setTime(6, payment.getPaymentTime() != null ? java.sql.Time.valueOf(payment.getPaymentTime()) : null);
-            pstmt.setString(7, payment.getTransactionId());
-            pstmt.setInt(8, payment.getPaymentId());
-            
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            throw new HotelException("Error updating payment: " + e.getMessage(), e);
-        }
-    }
-    
-
-    public boolean updatePaymentStatus(int paymentId, String newStatus) throws HotelException {
-        String query = "UPDATE payments SET payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE payment_id = ?";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setString(1, newStatus);
-            pstmt.setInt(2, paymentId);
-            
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            throw new HotelException("Error updating payment status: " + e.getMessage(), e);
-        }
-    }
-    
-
-    public boolean processRefund(int paymentId, java.math.BigDecimal refundAmount, String refundReason) throws HotelException {
-        String query = "UPDATE payments SET refund_amount = ?, refund_date = CURRENT_DATE, refund_reason = ?, " +
-                       "payment_status = 'Refunded', updated_at = CURRENT_TIMESTAMP WHERE payment_id = ?";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setBigDecimal(1, refundAmount);
-            pstmt.setString(2, refundReason);
-            pstmt.setInt(3, paymentId);
-            
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            throw new HotelException("Error processing refund: " + e.getMessage(), e);
-        }
-    }
-    
-
-    public List<Payment> getAllPayments() throws HotelException {
-        List<Payment> payments = new ArrayList<>();
-        String query = "SELECT * FROM payments ORDER BY payment_date DESC";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query);
-             ResultSet rs = pstmt.executeQuery()) {
-            
-            while (rs.next()) {
-                payments.add(mapResultSetToPayment(rs));
-            }
-        } catch (SQLException e) {
-            throw new HotelException("Error retrieving all payments: " + e.getMessage(), e);
-        }
-        return payments;
-    }
-    
-
-    public java.math.BigDecimal getTotalPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
-        String query = "SELECT COALESCE(SUM(payment_amount), 0) FROM payments " +
-                       "WHERE payment_status = 'Completed' AND payment_date BETWEEN ? AND ?";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setDate(1, java.sql.Date.valueOf(startDate));
-            pstmt.setDate(2, java.sql.Date.valueOf(endDate));
-            
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getBigDecimal(1);
-                }
-            }
-        } catch (SQLException e) {
-            throw new HotelException("Error getting total payments: " + e.getMessage(), e);
-        }
-        return java.math.BigDecimal.ZERO;
-    }
-    
-
-    public java.math.BigDecimal getTotalRefundsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
-        String query = "SELECT COALESCE(SUM(refund_amount), 0) FROM payments " +
-                       "WHERE refund_date BETWEEN ? AND ?";
-        
-        try (Connection conn = DBConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            
-            pstmt.setDate(1, java.sql.Date.valueOf(startDate));
-            pstmt.setDate(2, java.sql.Date.valueOf(endDate));
-            
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getBigDecimal(1);
-                }
-            }
-        } catch (SQLException e) {
-            throw new HotelException("Error getting total refunds: " + e.getMessage(), e);
-        }
-        return java.math.BigDecimal.ZERO;
-    }
-    
-
+    /**
+     * Map ResultSet to Payment object
+     */
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setPaymentId(rs.getInt("payment_id"));
         payment.setReservationId(rs.getInt("reservation_id"));
-        payment.setPaymentAmount(rs.getBigDecimal("payment_amount"));
+        payment.setPaymentAmount(rs.getDouble("payment_amount"));
         payment.setPaymentMethod(rs.getString("payment_method"));
         payment.setPaymentTypeDetails(rs.getString("payment_type_details"));
         payment.setPaymentStatus(rs.getString("payment_status"));
@@ -274,7 +189,7 @@ public class PaymentDAO {
             payment.setPaymentTime(paymentTime.toLocalTime());
         }
         
-        payment.setRefundAmount(rs.getBigDecimal("refund_amount"));
+        payment.setRefundAmount(rs.getDouble("refund_amount"));
         
         java.sql.Date refundDate = rs.getDate("refund_date");
         if (refundDate != null) {
@@ -283,8 +198,7 @@ public class PaymentDAO {
         
         payment.setRefundReason(rs.getString("refund_reason"));
         payment.setTransactionId(rs.getString("transaction_id"));
-        payment.setCreatedAt(rs.getTimestamp("created_at"));
-        payment.setUpdatedAt(rs.getTimestamp("updated_at"));
+        
         return payment;
     }
 }

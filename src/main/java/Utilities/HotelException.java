@@ -1,18 +1,15 @@
 package Utilities;
 
 /**
- * HotelException - Custom Exception for Hotel Reservation System
+ * HotelException - Custom Exception Class
  * 
- * Used for all business logic errors and validation failures.
- * Provides detailed error messages for debugging and user feedback.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
+ * Used for business logic exceptions throughout the Hotel Reservation System.
+ * Provides meaningful error messages for validation, database, and business logic failures.
  */
 public class HotelException extends Exception {
     
     /**
-     * Constructor with error message
+     * Create exception with error message
      * 
      * @param message the error message
      */
@@ -21,7 +18,7 @@ public class HotelException extends Exception {
     }
     
     /**
-     * Constructor with error message and cause
+     * Create exception with error message and cause
      * 
      * @param message the error message
      * @param cause the root cause exception
@@ -31,7 +28,7 @@ public class HotelException extends Exception {
     }
     
     /**
-     * Constructor with cause only
+     * Create exception with cause only
      * 
      * @param cause the root cause exception
      */

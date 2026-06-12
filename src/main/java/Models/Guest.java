@@ -6,11 +6,8 @@ import java.time.LocalDateTime;
 /**
  * Guest - Guest Model Class
  * 
- * Represents a hotel guest with personal information and identification.
- * Linked to a User account for authentication.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
+ * Represents a guest profile linked to a user account with personal information,
+ * contact details, and identification documents.
  */
 public class Guest {
     
@@ -158,12 +155,14 @@ public class Guest {
     
     // ============ UTILITY METHODS ============
     public String getFullName() {
-        StringBuilder name = new StringBuilder(firstName);
+        return firstName + " " + lastName;
+    }
+    
+    public String getFullNameWithMiddle() {
         if (middleName != null && !middleName.isEmpty()) {
-            name.append(" ").append(middleName);
+            return firstName + " " + middleName + " " + lastName;
         }
-        name.append(" ").append(lastName);
-        return name.toString();
+        return getFullName();
     }
     
     @Override

@@ -1,113 +1,131 @@
 package Utilities;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * CurrencyUtil - Currency Formatting and Calculation Utility
  * 
- * Provides methods for currency formatting, currency calculations including
- * tax calculations, subtotals, and total price calculations.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
+ * Provides methods for currency formatting, tax calculations, price calculations,
+ * and money conversion for Philippine Peso (PHP).
  */
 public class CurrencyUtil {
     
-    private static final DecimalFormat currencyFormatter = new DecimalFormat("0.00");
-    
     /**
-     * Format currency value for display
-     * 
-     * @param amount the amount to format
-     * @return formatted currency string (e.g., "PHP 1,234.56")
+     * Format amount as PHP currency string
+     * Example: PHP 5,000.00
      */
     public static String formatCurrency(double amount) {
-        String formatted = currencyFormatter.format(amount);
-        return Constants.CURRENCY_SYMBOL + " " + formatted;
+        return String.format(Constants.CURRENCY_FORMAT, amount);
     }
     
     /**
-     * Calculate tax on amount
-     * 
-     * @param subtotal the subtotal before tax
-     * @return tax amount
+     * Format BigDecimal amount as PHP currency
      */
-    public static double calculateTax(double subtotal) {
-        return subtotal * Constants.TAX_RATE;
+    public static String formatCurrency(BigDecimal amount) {
+        if (amount == null) {
+            return formatCurrency(0.0);
+        }
+        return formatCurrency(amount.doubleValue());
     }
     
     /**
-     * Calculate subtotal from room rate and nights
-     * 
-     * @param roomRate the room rate per night
-     * @param numberOfNights the number of nights
-     * @return subtotal amount
+     * Calculate tax (12%) on given amount
      */
-    public static double calculateSubtotal(double roomRate, long numberOfNights) {
-        return roomRate * numberOfNights;
+    public static BigDecimal calculateTax(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal taxRate = new BigDecimal(Constants.TAX_RATE);
+        return amount.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
     }
     
     /**
-     * Calculate final total with tax and discount
-     * 
-     * @param roomRate the room rate per night
-     * @param numberOfNights the number of nights
-     * @param discountApplied the discount amount (if any)
-     * @return final total price
+     * Calculate tax on double amount
      */
-    public static double calculateFinalTotal(double roomRate, long numberOfNights, double discountApplied) {
-        double subtotal = calculateSubtotal(roomRate, numberOfNights);
-        double tax = calculateTax(subtotal);
-        return (subtotal + tax) - discountApplied;
-    }
-    
-    /**
-     * Calculate final total with tax (no discount)
-     * 
-     * @param roomRate the room rate per night
-     * @param numberOfNights the number of nights
-     * @return final total price
-     */
-    public static double calculateFinalTotal(double roomRate, long numberOfNights) {
-        return calculateFinalTotal(roomRate, numberOfNights, 0.0);
-    }
-    
-    /**
-     * Parse currency string to double
-     * 
-     * @param currencyString the currency string to parse
-     * @return double value
-     */
-    public static double parseCurrency(String currencyString) {
-        try {
-            if (currencyString == null || currencyString.isEmpty()) {
-                return 0.0;
-            }
-            // Remove currency symbol and spaces
-            String cleaned = currencyString.replaceAll("[^0-9.]", "");
-            return Double.parseDouble(cleaned);
-        } catch (NumberFormatException e) {
+    public static double calculateTax(double amount) {
+        if (amount <= 0) {
             return 0.0;
+        }
+        return Math.round(amount * Constants.TAX_RATE * 100.0) / 100.0;
+    }
+    
+    /**
+     * Calculate subtotal (room rate × number of nights)
+     */
+    public static BigDecimal calculateSubtotal(BigDecimal roomRate, int numberOfNights) {
+        if (roomRate == null || numberOfNights <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        return roomRate.multiply(new BigDecimal(numberOfNights)).setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Calculate final total with tax
+     */
+    public static BigDecimal calculateFinalTotal(BigDecimal subtotal, BigDecimal discountApplied) {
+        if (subtotal == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal discount = (discountApplied != null) ? discountApplied : BigDecimal.ZERO;
+        BigDecimal tax = calculateTax(subtotal);
+        
+        return subtotal.add(tax).subtract(discount).setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Convert string input to BigDecimal safely
+     */
+    public static BigDecimal convertToDecimal(String amountString) {
+        if (amountString == null || amountString.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        try {
+            return new BigDecimal(amountString.trim()).setScale(2, RoundingMode.HALF_UP);
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
         }
     }
     
     /**
-     * Round currency to 2 decimal places
-     * 
-     * @param amount the amount to round
-     * @return rounded amount
+     * Round amount to 2 decimal places
      */
-    public static double roundCurrency(double amount) {
-        return Math.round(amount * 100.0) / 100.0;
+    public static BigDecimal roundAmount(BigDecimal amount) {
+        if (amount == null) {
+            return BigDecimal.ZERO;
+        }
+        return amount.setScale(2, RoundingMode.HALF_UP);
     }
     
     /**
-     * Check if amount is positive and valid
-     * 
-     * @param amount the amount to validate
-     * @return true if amount is valid
+     * Calculate change from payment
      */
-    public static boolean isValidAmount(double amount) {
-        return amount > 0 && amount <= 999999.99;
+    public static BigDecimal calculateChange(BigDecimal amountPaid, BigDecimal amountDue) {
+        if (amountPaid == null || amountDue == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal change = amountPaid.subtract(amountDue);
+        
+        if (change.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        return change.setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Check if amount is valid (positive and not exceeding max)
+     */
+    public static boolean isValidAmount(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        
+        return amount.compareTo(new BigDecimal("999999.99")) <= 0;
     }
 }

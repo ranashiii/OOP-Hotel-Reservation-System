@@ -1,23 +1,28 @@
 package HotelReservationMainSystem;
 
 import Models.User;
-import Utilities.HotelException;
+import Models.Guest;
 
-
+/**
+ * SessionManager - Singleton Session Management
+ * 
+ * Manages the current user session throughout the application.
+ * Stores logged-in user information and guest profile when applicable.
+ */
 public class SessionManager {
     
-    // Singleton instance
     private static SessionManager instance;
-    
-    // Current logged-in user
     private User currentUser;
+    private Guest currentGuest;
     
-
-    private SessionManager() {
-        this.currentUser = null;
-    }
+    /**
+     * Private constructor for singleton pattern
+     */
+    private SessionManager() {}
     
-
+    /**
+     * Get singleton instance
+     */
     public static synchronized SessionManager getInstance() {
         if (instance == null) {
             instance = new SessionManager();
@@ -25,103 +30,106 @@ public class SessionManager {
         return instance;
     }
     
-
-    public void login(User user) throws HotelException {
-        if (user == null) {
-            throw new HotelException("Cannot login with null user");
-        }
+    /**
+     * Set the current user session
+     */
+    public void setCurrentUser(User user) {
         this.currentUser = user;
     }
     
     /**
-     * Logout user - Clear current session
+     * Get the current user
      */
-    public void logout() {
-        this.currentUser = null;
-    }
-    
-
     public User getCurrentUser() {
-        return this.currentUser;
+        return currentUser;
     }
     
-
-    public boolean isLoggedIn() {
-        return this.currentUser != null;
-    }
-    
-
+    /**
+     * Get current user ID
+     */
     public int getCurrentUserId() {
-        if (this.currentUser == null) {
+        if (currentUser == null) {
             return -1;
         }
-        return this.currentUser.getUserId();
+        return currentUser.getUserId();
     }
     
-
-    public String getCurrentUsername() {
-        if (this.currentUser == null) {
+    /**
+     * Get current user's access level
+     */
+    public String getCurrentUserAccessLevel() {
+        if (currentUser == null) {
             return null;
         }
-        return this.currentUser.getUsername();
+        return currentUser.getAccessLevel();
     }
     
-
-    public String getCurrentAccessLevel() {
-        if (this.currentUser == null) {
-            return null;
-        }
-        return this.currentUser.getAccessLevel();
-    }
-    
-
-    public String getCurrentEmail() {
-        if (this.currentUser == null) {
-            return null;
-        }
-        return this.currentUser.getEmail();
-    }
-    
-
+    /**
+     * Check if user is admin
+     */
     public boolean isAdmin() {
-        if (this.currentUser == null) {
+        if (currentUser == null) {
             return false;
         }
-        return "Admin".equalsIgnoreCase(this.currentUser.getAccessLevel());
+        return currentUser.isAdmin();
     }
     
-
+    /**
+     * Check if user is receptionist
+     */
     public boolean isReceptionist() {
-        if (this.currentUser == null) {
+        if (currentUser == null) {
             return false;
         }
-        return "Receptionist".equalsIgnoreCase(this.currentUser.getAccessLevel());
+        return currentUser.isReceptionist();
     }
     
-
+    /**
+     * Check if user is guest
+     */
     public boolean isGuest() {
-        if (this.currentUser == null) {
+        if (currentUser == null) {
             return false;
         }
-        return "Guest".equalsIgnoreCase(this.currentUser.getAccessLevel());
+        return currentUser.isGuest();
     }
     
-
+    /**
+     * Set current guest profile
+     */
+    public void setCurrentGuest(Guest guest) {
+        this.currentGuest = guest;
+    }
+    
+    /**
+     * Get current guest profile
+     */
+    public Guest getCurrentGuest() {
+        return currentGuest;
+    }
+    
+    /**
+     * Get current guest ID
+     */
+    public int getCurrentGuestId() {
+        if (currentGuest == null) {
+            return -1;
+        }
+        return currentGuest.getGuestId();
+    }
+    
+    /**
+     * Clear session (logout)
+     */
     public void clearSession() {
         this.currentUser = null;
+        this.currentGuest = null;
     }
     
-
-    @Override
-    public String toString() {
-        if (this.currentUser == null) {
-            return "Session: Not Logged In";
-        }
-        return "Session {" +
-                "userId=" + this.currentUser.getUserId() +
-                ", username='" + this.currentUser.getUsername() + '\'' +
-                ", accessLevel='" + this.currentUser.getAccessLevel() + '\'' +
-                ", email='" + this.currentUser.getEmail() + '\'' +
-                '}';
+    /**
+     * Check if user is logged in
+     */
+    public boolean isLoggedIn() {
+        return currentUser != null;
     }
 }

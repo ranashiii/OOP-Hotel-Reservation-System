@@ -1,5 +1,6 @@
 package Models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -7,11 +8,8 @@ import java.time.LocalTime;
 /**
  * Reservation - Reservation Model Class
  * 
- * Represents a hotel room reservation with dates, guest info, pricing,
- * and status tracking throughout the reservation lifecycle.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
+ * Represents a hotel room reservation with guest, room, dates, pricing,
+ * and status tracking. Core model for the reservation system.
  */
 public class Reservation {
     
@@ -25,10 +23,10 @@ public class Reservation {
     private int numberOfGuests;
     private String reservationStatus;
     private int numberOfNights;
-    private double roomRate;
-    private double totalPrice;
-    private double discountApplied;
-    private double finalTotal;
+    private BigDecimal roomRate;
+    private BigDecimal totalPrice;
+    private BigDecimal discountApplied;
+    private BigDecimal finalTotal;
     private LocalDate reservationDate;
     private String notes;
     private LocalDateTime cancelledDate;
@@ -40,15 +38,14 @@ public class Reservation {
     public Reservation() {}
     
     public Reservation(int guestId, int roomId, LocalDate checkInDate, 
-                      LocalDate checkOutDate, int numberOfGuests, double totalPrice) {
+                       LocalDate checkOutDate, int numberOfGuests) {
         this.guestId = guestId;
         this.roomId = roomId;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.numberOfGuests = numberOfGuests;
-        this.totalPrice = totalPrice;
         this.reservationStatus = "Confirmed";
-        this.reservationDate = LocalDate.now();
+        this.discountApplied = BigDecimal.ZERO;
     }
     
     // ============ GETTERS & SETTERS ============
@@ -132,35 +129,35 @@ public class Reservation {
         this.numberOfNights = numberOfNights;
     }
     
-    public double getRoomRate() {
+    public BigDecimal getRoomRate() {
         return roomRate;
     }
     
-    public void setRoomRate(double roomRate) {
+    public void setRoomRate(BigDecimal roomRate) {
         this.roomRate = roomRate;
     }
     
-    public double getTotalPrice() {
+    public BigDecimal getTotalPrice() {
         return totalPrice;
     }
     
-    public void setTotalPrice(double totalPrice) {
+    public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
     }
     
-    public double getDiscountApplied() {
+    public BigDecimal getDiscountApplied() {
         return discountApplied;
     }
     
-    public void setDiscountApplied(double discountApplied) {
+    public void setDiscountApplied(BigDecimal discountApplied) {
         this.discountApplied = discountApplied;
     }
     
-    public double getFinalTotal() {
+    public BigDecimal getFinalTotal() {
         return finalTotal;
     }
     
-    public void setFinalTotal(double finalTotal) {
+    public void setFinalTotal(BigDecimal finalTotal) {
         this.finalTotal = finalTotal;
     }
     
@@ -214,19 +211,19 @@ public class Reservation {
     
     // ============ UTILITY METHODS ============
     public boolean isConfirmed() {
-        return "Confirmed".equalsIgnoreCase(this.reservationStatus);
+        return "Confirmed".equalsIgnoreCase(reservationStatus);
     }
     
     public boolean isCheckedIn() {
-        return "Checked-In".equalsIgnoreCase(this.reservationStatus);
+        return "Checked-In".equalsIgnoreCase(reservationStatus);
     }
     
     public boolean isCheckedOut() {
-        return "Checked-Out".equalsIgnoreCase(this.reservationStatus);
+        return "Checked-Out".equalsIgnoreCase(reservationStatus);
     }
     
     public boolean isCancelled() {
-        return "Cancelled".equalsIgnoreCase(this.reservationStatus);
+        return "Cancelled".equalsIgnoreCase(reservationStatus);
     }
     
     @Override
@@ -237,8 +234,9 @@ public class Reservation {
                 ", roomId=" + roomId +
                 ", checkInDate=" + checkInDate +
                 ", checkOutDate=" + checkOutDate +
+                ", numberOfNights=" + numberOfNights +
+                ", finalTotal=" + finalTotal +
                 ", status='" + reservationStatus + '\'' +
-                ", totalPrice=" + totalPrice +
                 '}';
     }
 }
