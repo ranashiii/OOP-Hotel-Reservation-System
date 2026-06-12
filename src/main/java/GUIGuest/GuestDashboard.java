@@ -40,7 +40,9 @@ public class GuestDashboard extends JFrame {
         topPanel.setBackground(new Color(25, 118, 210));
         topPanel.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, 60));
         
-        JLabel welcomeLabel = new JLabel("Welcome, " + SessionManager.getInstance().getCurrentUsername());
+        // FIX: Use getInstance() then call getCurrentUsername() instance method
+        String username = SessionManager.getInstance().getCurrentUsername();
+        JLabel welcomeLabel = new JLabel("Welcome, " + (username != null ? username : "Guest"));
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
         welcomeLabel.setForeground(Color.WHITE);
         welcomeLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 0));
@@ -48,7 +50,7 @@ public class GuestDashboard extends JFrame {
         
         JButton logoutButton = new JButton("Logout");
         logoutButton.setPreferredSize(new Dimension(100, 40));
-        logoutButton.addActionListener(this::handleLogout);
+        logoutButton.addActionListener(e -> handleLogout());
         topPanel.add(logoutButton, BorderLayout.EAST);
         
         add(topPanel, BorderLayout.NORTH);
@@ -68,7 +70,8 @@ public class GuestDashboard extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
     
-    private void handleLogout(ActionEvent e) {
+    // FIX: Changed method signature to not take ActionEvent parameter
+    private void handleLogout() {
         SessionManager.getInstance().logout();
         dispose();
         new LoginFrame().setVisible(true);

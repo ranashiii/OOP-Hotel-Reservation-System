@@ -312,8 +312,13 @@ public class UserDAO {
         user.setEmail(rs.getString("email"));
         user.setAccessLevel(rs.getString("access_level"));
         user.setActive(rs.getBoolean("is_active"));
-        user.setCreatedAt(rs.getTimestamp("created_at"));
-        user.setUpdatedAt(rs.getTimestamp("updated_at"));
+        
+        // FIX: Convert java.sql.Timestamp to LocalDateTime (null-safe)
+        user.setCreatedAt(rs.getTimestamp("created_at") != null ? 
+            rs.getTimestamp("created_at").toLocalDateTime() : null);
+        user.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
+            rs.getTimestamp("updated_at").toLocalDateTime() : null);
+        
         return user;
     }
 }
