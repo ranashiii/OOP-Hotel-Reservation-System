@@ -106,17 +106,9 @@ CREATE TABLE payments (
     INDEX idx_payment_status (payment_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Default admin account (password: admin123)
 INSERT INTO users (username, password, email, access_level, is_active) VALUES
-('admin', '$2a$10$SlQvG5g3OW7l0zqUMHVseuCHsNr8L5GRFaUDQS3VqJg9kYHiLF8H2', 'admin@hotelreservation.com', 'Admin', TRUE);
-
-INSERT INTO users (username, password, email, access_level, is_active) VALUES
-('receptionist', '$2a$10$SlQvG5g3OW7l0zqUMHVseuCHsNr8L5GRFaUDQS3VqJg9kYHiLF8H2', 'receptionist@hotelreservation.com', 'Receptionist', TRUE);
-
-INSERT INTO users (username, password, email, access_level, is_active) VALUES
-('guest', '$2a$10$SlQvG5g3OW7l0zqUMHVseuCHsNr8L5GRFaUDQS3VqJg9kYHiLF8H2', 'guest@hotelreservation.com', 'Guest', TRUE);
-
-INSERT INTO guests (user_id, first_name, middle_name, last_name, email, phone_number, address, date_of_birth, nationality, id_document_type, id_document_number)
-VALUES (3, 'Juan', 'Dela', 'Cruz', 'guest@hotelreservation.com', '09171234567', '123 Main Street, Manila, Philippines', '1990-05-15', 'Filipino', 'National ID', 'NI123456789');
+('admin', 'c63bc483', 'admin@hotelreservation.com', 'Admin', TRUE);
 
 INSERT INTO rooms (room_number, room_type, floor, capacity, price_per_night, amenities, status)
 VALUES ('101', 'Single Standard', 1, 1, 3500.00, 'WiFi, AC, TV, Private Bathroom', 'Available');
@@ -141,8 +133,3 @@ VALUES ('401', 'Suite Deluxe', 4, 4, 12000.00, 'WiFi, AC, TV, Multiple Rooms, Mi
 
 INSERT INTO rooms (room_number, room_type, floor, capacity, price_per_night, amenities, status)
 VALUES ('402', 'Suite Deluxe', 4, 4, 12000.00, 'WiFi, AC, TV, Multiple Rooms, Mini Bar, Jacuzzi, City View, Balcony', 'Available');
-
-SHOW TABLES;
-SELECT * FROM users;
-SELECT * FROM rooms;
-SELECT * FROM guests;

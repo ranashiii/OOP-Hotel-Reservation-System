@@ -172,14 +172,14 @@ public class UserDAO {
     }
     
     /**
-     * Deletes a user account (soft delete - marks as inactive)
+     * Permanently deletes a user account from the database (hard delete)
      * 
      * @param userId the user ID to delete
      * @return true if deletion successful, false otherwise
      * @throws HotelException if deletion fails
      */
     public boolean deleteUser(int userId) throws HotelException {
-        String query = "UPDATE users SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
+        String query = "DELETE FROM users WHERE user_id = ?";
         
         try (Connection conn = DBConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
