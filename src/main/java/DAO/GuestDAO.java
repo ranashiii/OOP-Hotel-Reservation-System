@@ -7,30 +7,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Guest Data Access Object (DAO)
- * 
- * Handles all database operations for Guest entities.
- * Manages guest registration, profile management, and information updates.
- * Uses PreparedStatements to prevent SQL injection attacks.
- * 
- * Operations:
- * - Create new guest profiles
- * - Retrieve guest by ID, email, phone
- * - Update guest information
- * - Delete guest accounts
- * - List all guests
- * - Search guests
- */
+
 public class GuestDAO {
     
-    /**
-     * Creates a new guest in the database
-     * 
-     * @param guest Guest object containing guest details
-     * @return generated guest ID
-     * @throws HotelException if creation fails
-     */
+
     public int createGuest(Guest guest) throws HotelException {
         String query = "INSERT INTO guests (user_id, first_name, middle_name, last_name, email, phone_number, address, " +
                        "date_of_birth, nationality, id_document_type, id_document_number) " +
@@ -69,13 +49,7 @@ public class GuestDAO {
         }
     }
     
-    /**
-     * Retrieves a guest by guest ID
-     * 
-     * @param guestId the guest ID to search for
-     * @return Guest object if found, null otherwise
-     * @throws HotelException if database error occurs
-     */
+
     public Guest getGuestById(int guestId) throws HotelException {
         String query = "SELECT * FROM guests WHERE guest_id = ?";
         
@@ -95,13 +69,7 @@ public class GuestDAO {
         return null;
     }
     
-    /**
-     * Retrieves a guest by user ID
-     * 
-     * @param userId the user ID associated with guest
-     * @return Guest object if found, null otherwise
-     * @throws HotelException if database error occurs
-     */
+
     public Guest getGuestByUserId(int userId) throws HotelException {
         String query = "SELECT * FROM guests WHERE user_id = ?";
         
@@ -121,13 +89,7 @@ public class GuestDAO {
         return null;
     }
     
-    /**
-     * Retrieves a guest by email address
-     * 
-     * @param email the email to search for
-     * @return Guest object if found, null otherwise
-     * @throws HotelException if database error occurs
-     */
+
     public Guest getGuestByEmail(String email) throws HotelException {
         String query = "SELECT * FROM guests WHERE email = ?";
         
@@ -147,13 +109,7 @@ public class GuestDAO {
         return null;
     }
     
-    /**
-     * Retrieves a guest by phone number
-     * 
-     * @param phoneNumber the phone number to search for
-     * @return Guest object if found, null otherwise
-     * @throws HotelException if database error occurs
-     */
+
     public Guest getGuestByPhoneNumber(String phoneNumber) throws HotelException {
         String query = "SELECT * FROM guests WHERE phone_number = ?";
         
@@ -173,13 +129,7 @@ public class GuestDAO {
         return null;
     }
     
-    /**
-     * Updates an existing guest's information
-     * 
-     * @param guest Guest object with updated information
-     * @return true if update successful, false otherwise
-     * @throws HotelException if update fails
-     */
+
     public boolean updateGuest(Guest guest) throws HotelException {
         String query = "UPDATE guests SET first_name = ?, middle_name = ?, last_name = ?, email = ?, " +
                        "phone_number = ?, address = ?, date_of_birth = ?, nationality = ?, " +
@@ -208,13 +158,7 @@ public class GuestDAO {
         }
     }
     
-    /**
-     * Deletes a guest account
-     * 
-     * @param guestId the guest ID to delete
-     * @return true if deletion successful, false otherwise
-     * @throws HotelException if deletion fails
-     */
+
     public boolean deleteGuest(int guestId) throws HotelException {
         String query = "DELETE FROM guests WHERE guest_id = ?";
         
@@ -229,12 +173,7 @@ public class GuestDAO {
         }
     }
     
-    /**
-     * Retrieves all guests from the database
-     * 
-     * @return List of all Guest objects
-     * @throws HotelException if retrieval fails
-     */
+
     public List<Guest> getAllGuests() throws HotelException {
         List<Guest> guests = new ArrayList<>();
         String query = "SELECT * FROM guests ORDER BY created_at DESC";
@@ -252,13 +191,7 @@ public class GuestDAO {
         return guests;
     }
     
-    /**
-     * Searches for guests by name
-     * 
-     * @param searchName part of first or last name to search
-     * @return List of Guest objects matching search criteria
-     * @throws HotelException if search fails
-     */
+
     public List<Guest> searchGuestsByName(String searchName) throws HotelException {
         List<Guest> guests = new ArrayList<>();
         String query = "SELECT * FROM guests WHERE CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY last_name, first_name";
@@ -279,14 +212,7 @@ public class GuestDAO {
         return guests;
     }
     
-    /**
-     * Maps a ResultSet row to a Guest object
-     * Helper method used by query methods
-     * 
-     * @param rs ResultSet containing guest data
-     * @return Guest object populated with data from ResultSet
-     * @throws SQLException if data extraction fails
-     */
+
     private Guest mapResultSetToGuest(ResultSet rs) throws SQLException {
         Guest guest = new Guest();
         guest.setGuestId(rs.getInt("guest_id"));

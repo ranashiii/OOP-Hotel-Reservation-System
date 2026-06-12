@@ -1,4 +1,4 @@
-package OtherUtil;
+package Utilities;
 
 
 import javax.swing.*;

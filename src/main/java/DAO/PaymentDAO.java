@@ -8,30 +8,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Payment Data Access Object (DAO)
- * 
- * Handles all database operations for Payment entities.
- * Manages payment processing, recording, refunds, and transaction history.
- * Uses PreparedStatements to prevent SQL injection attacks.
- * 
- * Operations:
- * - Create new payment records
- * - Retrieve payments by ID, reservation, status, date range
- * - Update payment information and status
- * - Process refunds
- * - List all payments with filters
- * - Get payment totals
- */
+
 public class PaymentDAO {
     
-    /**
-     * Creates a new payment record in the database
-     * 
-     * @param payment Payment object containing payment details
-     * @return generated payment ID
-     * @throws HotelException if creation fails
-     */
+
     public int createPayment(Payment payment) throws HotelException {
         String query = "INSERT INTO payments (reservation_id, payment_amount, payment_method, payment_type_details, " +
                        "payment_status, payment_date, payment_time, transaction_id) " +
@@ -67,13 +47,7 @@ public class PaymentDAO {
         }
     }
     
-    /**
-     * Retrieves a payment by payment ID
-     * 
-     * @param paymentId the payment ID to search for
-     * @return Payment object if found, null otherwise
-     * @throws HotelException if database error occurs
-     */
+
     public Payment getPaymentById(int paymentId) throws HotelException {
         String query = "SELECT * FROM payments WHERE payment_id = ?";
         
@@ -93,13 +67,7 @@ public class PaymentDAO {
         return null;
     }
     
-    /**
-     * Retrieves all payments for a specific reservation
-     * 
-     * @param reservationId the reservation ID
-     * @return List of Payment objects for the reservation
-     * @throws HotelException if retrieval fails
-     */
+
     public List<Payment> getPaymentsByReservationId(int reservationId) throws HotelException {
         List<Payment> payments = new ArrayList<>();
         String query = "SELECT * FROM payments WHERE reservation_id = ? ORDER BY payment_date DESC";
@@ -120,14 +88,7 @@ public class PaymentDAO {
         return payments;
     }
     
-    /**
-     * Retrieves payments by status
-     * Valid statuses: Pending, Completed, Failed, Refunded
-     * 
-     * @param status the status to filter by
-     * @return List of Payment objects with matching status
-     * @throws HotelException if retrieval fails
-     */
+
     public List<Payment> getPaymentsByStatus(String status) throws HotelException {
         List<Payment> payments = new ArrayList<>();
         String query = "SELECT * FROM payments WHERE payment_status = ? ORDER BY payment_date DESC";
@@ -148,14 +109,7 @@ public class PaymentDAO {
         return payments;
     }
     
-    /**
-     * Retrieves payments within a date range
-     * 
-     * @param startDate start date for range
-     * @param endDate end date for range
-     * @return List of Payment objects within date range
-     * @throws HotelException if retrieval fails
-     */
+
     public List<Payment> getPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
         List<Payment> payments = new ArrayList<>();
         String query = "SELECT * FROM payments WHERE payment_date BETWEEN ? AND ? ORDER BY payment_date DESC";
@@ -177,13 +131,7 @@ public class PaymentDAO {
         return payments;
     }
     
-    /**
-     * Updates an existing payment's information
-     * 
-     * @param payment Payment object with updated information
-     * @return true if update successful, false otherwise
-     * @throws HotelException if update fails
-     */
+
     public boolean updatePayment(Payment payment) throws HotelException {
         String query = "UPDATE payments SET payment_amount = ?, payment_method = ?, payment_type_details = ?, " +
                        "payment_status = ?, payment_date = ?, payment_time = ?, transaction_id = ?, updated_at = CURRENT_TIMESTAMP " +
@@ -208,15 +156,7 @@ public class PaymentDAO {
         }
     }
     
-    /**
-     * Updates payment status
-     * Valid statuses: Pending, Completed, Failed, Refunded
-     * 
-     * @param paymentId the payment ID
-     * @param newStatus the new status
-     * @return true if update successful, false otherwise
-     * @throws HotelException if update fails
-     */
+
     public boolean updatePaymentStatus(int paymentId, String newStatus) throws HotelException {
         String query = "UPDATE payments SET payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE payment_id = ?";
         
@@ -233,16 +173,7 @@ public class PaymentDAO {
         }
     }
     
-    /**
-     * Processes a refund for a payment
-     * Updates payment with refund information
-     * 
-     * @param paymentId the payment ID to refund
-     * @param refundAmount the amount to refund
-     * @param refundReason the reason for refund
-     * @return true if refund processed successfully, false otherwise
-     * @throws HotelException if refund fails
-     */
+
     public boolean processRefund(int paymentId, java.math.BigDecimal refundAmount, String refundReason) throws HotelException {
         String query = "UPDATE payments SET refund_amount = ?, refund_date = CURRENT_DATE, refund_reason = ?, " +
                        "payment_status = 'Refunded', updated_at = CURRENT_TIMESTAMP WHERE payment_id = ?";
@@ -261,12 +192,7 @@ public class PaymentDAO {
         }
     }
     
-    /**
-     * Retrieves all payments from the database
-     * 
-     * @return List of all Payment objects
-     * @throws HotelException if retrieval fails
-     */
+
     public List<Payment> getAllPayments() throws HotelException {
         List<Payment> payments = new ArrayList<>();
         String query = "SELECT * FROM payments ORDER BY payment_date DESC";
@@ -284,14 +210,7 @@ public class PaymentDAO {
         return payments;
     }
     
-    /**
-     * Gets total payment amount for a date range
-     * 
-     * @param startDate start date
-     * @param endDate end date
-     * @return total payment amount in the period
-     * @throws HotelException if query fails
-     */
+
     public java.math.BigDecimal getTotalPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
         String query = "SELECT COALESCE(SUM(payment_amount), 0) FROM payments " +
                        "WHERE payment_status = 'Completed' AND payment_date BETWEEN ? AND ?";
@@ -313,14 +232,7 @@ public class PaymentDAO {
         return java.math.BigDecimal.ZERO;
     }
     
-    /**
-     * Gets total refunded amount for a date range
-     * 
-     * @param startDate start date
-     * @param endDate end date
-     * @return total refunded amount in the period
-     * @throws HotelException if query fails
-     */
+
     public java.math.BigDecimal getTotalRefundsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
         String query = "SELECT COALESCE(SUM(refund_amount), 0) FROM payments " +
                        "WHERE refund_date BETWEEN ? AND ?";
@@ -342,14 +254,7 @@ public class PaymentDAO {
         return java.math.BigDecimal.ZERO;
     }
     
-    /**
-     * Maps a ResultSet row to a Payment object
-     * Helper method used by query methods
-     * 
-     * @param rs ResultSet containing payment data
-     * @return Payment object populated with data from ResultSet
-     * @throws SQLException if data extraction fails
-     */
+
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setPaymentId(rs.getInt("payment_id"));

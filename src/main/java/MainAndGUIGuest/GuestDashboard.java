@@ -2,7 +2,7 @@ package MainAndGUIGuest;
 
 import Manager.SessionManager;
 import OtherGUILoginRegistration.LoginFrame;
-import OtherUtil.Logger;
+import Utilities.Logger;
 
 import javax.swing.*;
 import java.awt.*;
