@@ -105,13 +105,13 @@ public class PaymentDAOExtended {
         Payment payment = new Payment();
         payment.setPaymentId(rs.getInt("payment_id"));
         payment.setReservationId(rs.getInt("reservation_id"));
-        payment.setPaymentAmount(rs.getDouble("payment_amount"));
+        payment.setPaymentAmount(rs.getBigDecimal("payment_amount"));
         payment.setPaymentMethod(rs.getString("payment_method"));
         payment.setPaymentTypeDetails(rs.getString("payment_type_details"));
         payment.setPaymentStatus(rs.getString("payment_status"));
         payment.setPaymentDate(rs.getDate("payment_date") != null ? rs.getDate("payment_date").toLocalDate() : null);
         payment.setPaymentTime(rs.getTime("payment_time") != null ? rs.getTime("payment_time").toLocalTime() : null);
-        payment.setRefundAmount(rs.getDouble("refund_amount"));
+        payment.setRefundAmount(rs.getBigDecimal("refund_amount"));
         payment.setRefundDate(rs.getDate("refund_date") != null ? rs.getDate("refund_date").toLocalDate() : null);
         payment.setRefundReason(rs.getString("refund_reason"));
         payment.setTransactionId(rs.getString("transaction_id"));

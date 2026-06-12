@@ -3,7 +3,9 @@ package DAO;
 import Config.DBConfig;
 import Models.Payment;
 import Utilities.HotelException;
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +29,7 @@ public class PaymentDAO {
              PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             
             pstmt.setInt(1, payment.getReservationId());
-            pstmt.setBigDecimal(2, new java.math.BigDecimal(payment.getPaymentAmount()));
+            pstmt.setBigDecimal(2, payment.getPaymentAmount());
             pstmt.setString(3, payment.getPaymentMethod());
             pstmt.setString(4, payment.getPaymentTypeDetails());
             pstmt.setString(5, payment.getPaymentStatus());
@@ -131,7 +133,7 @@ public class PaymentDAO {
              PreparedStatement pstmt = conn.prepareStatement(query)) {
             
             pstmt.setString(1, payment.getPaymentStatus());
-            pstmt.setDouble(2, payment.getRefundAmount());
+            pstmt.setBigDecimal(2, payment.getRefundAmount());
             pstmt.setDate(3, payment.getRefundDate() != null ? 
                 java.sql.Date.valueOf(payment.getRefundDate()) : null);
             pstmt.setString(4, payment.getRefundReason());
@@ -168,13 +170,75 @@ public class PaymentDAO {
     }
     
     /**
+     * Get total payments (completed) within a date range
+     */
+    public BigDecimal getTotalPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
+        String query = "SELECT COALESCE(SUM(payment_amount), 0) AS total FROM payments " +
+                       "WHERE payment_status = 'Completed' AND payment_date >= ? AND payment_date <= ?";
+        try (Connection conn = DBConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setDate(1, java.sql.Date.valueOf(startDate));
+            pstmt.setDate(2, java.sql.Date.valueOf(endDate));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal result = rs.getBigDecimal("total");
+                    return result != null ? result : BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            throw new HotelException("Error calculating total payments: " + e.getMessage(), e);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Get all payments within a date range
+     */
+    public List<Payment> getPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
+        String query = "SELECT * FROM payments WHERE payment_date >= ? AND payment_date <= ? ORDER BY payment_date DESC";
+        List<Payment> payments = new ArrayList<>();
+        try (Connection conn = DBConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setDate(1, java.sql.Date.valueOf(startDate));
+            pstmt.setDate(2, java.sql.Date.valueOf(endDate));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    payments.add(mapResultSetToPayment(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new HotelException("Error retrieving payments by date range: " + e.getMessage(), e);
+        }
+        return payments;
+    }
+
+    /**
+     * Process refund for a payment
+     */
+    public boolean processRefund(int paymentId, BigDecimal refundAmount, String refundReason) throws HotelException {
+        String query = "UPDATE payments SET payment_status = 'Refunded', refund_amount = ?, " +
+                       "refund_date = ?, refund_reason = ? WHERE payment_id = ?";
+        try (Connection conn = DBConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setBigDecimal(1, refundAmount);
+            pstmt.setDate(2, java.sql.Date.valueOf(LocalDate.now()));
+            pstmt.setString(3, refundReason);
+            pstmt.setInt(4, paymentId);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            throw new HotelException("Error processing refund: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Map ResultSet to Payment object
      */
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setPaymentId(rs.getInt("payment_id"));
         payment.setReservationId(rs.getInt("reservation_id"));
-        payment.setPaymentAmount(rs.getDouble("payment_amount"));
+        payment.setPaymentAmount(rs.getBigDecimal("payment_amount"));
         payment.setPaymentMethod(rs.getString("payment_method"));
         payment.setPaymentTypeDetails(rs.getString("payment_type_details"));
         payment.setPaymentStatus(rs.getString("payment_status"));
@@ -189,7 +253,7 @@ public class PaymentDAO {
             payment.setPaymentTime(paymentTime.toLocalTime());
         }
         
-        payment.setRefundAmount(rs.getDouble("refund_amount"));
+        payment.setRefundAmount(rs.getBigDecimal("refund_amount"));
         
         java.sql.Date refundDate = rs.getDate("refund_date");
         if (refundDate != null) {

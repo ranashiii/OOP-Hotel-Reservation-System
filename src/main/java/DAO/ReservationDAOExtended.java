@@ -112,10 +112,10 @@ public class ReservationDAOExtended {
         reservation.setNumberOfGuests(rs.getInt("number_of_guests"));
         reservation.setReservationStatus(rs.getString("reservation_status"));
         reservation.setNumberOfNights(rs.getInt("number_of_nights"));
-        reservation.setRoomRate(rs.getDouble("room_rate"));
-        reservation.setTotalPrice(rs.getDouble("total_price"));
-        reservation.setDiscountApplied(rs.getDouble("discount_applied"));
-        reservation.setFinalTotal(rs.getDouble("final_total"));
+        reservation.setRoomRate(rs.getBigDecimal("room_rate"));
+        reservation.setTotalPrice(rs.getBigDecimal("total_price"));
+        reservation.setDiscountApplied(rs.getBigDecimal("discount_applied"));
+        reservation.setFinalTotal(rs.getBigDecimal("final_total"));
         reservation.setReservationDate(rs.getDate("reservation_date").toLocalDate());
         reservation.setNotes(rs.getString("notes"));
         return reservation;
