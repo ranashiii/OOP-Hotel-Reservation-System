@@ -11,6 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Dashboard Service Layer
@@ -37,7 +38,7 @@ public class DashboardService {
             .filter(r -> r.getCheckInDate().equals(today) && 
                         (r.getReservationStatus().equals("Confirmed") || 
                          r.getReservationStatus().equals("Checked-In")))
-            .toList();
+            .collect(java.util.stream.Collectors.toList());
     }
     
     /**
@@ -53,7 +54,7 @@ public class DashboardService {
         return allReservations.stream()
             .filter(r -> r.getCheckOutDate().equals(today) && 
                         r.getReservationStatus().equals("Checked-In"))
-            .toList();
+            .collect(java.util.stream.Collectors.toList());
     }
     
     /**

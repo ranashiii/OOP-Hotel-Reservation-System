@@ -266,7 +266,8 @@ public class RecordPaymentPanel extends JPanel {
             
             Payment payment = new Payment();
             payment.setReservationId(currentReservation.getReservationId());
-            payment.setPaymentAmount(paymentAmount.doubleValue());
+            // FIX: Payment.setPaymentAmount() takes BigDecimal; paymentAmount is already BigDecimal
+            payment.setPaymentAmount(paymentAmount);
             payment.setPaymentMethod(paymentMethod);
             payment.setPaymentTypeDetails(paymentDetails);
             payment.setPaymentStatus(Constants.PAYMENT_STATUS_COMPLETED);

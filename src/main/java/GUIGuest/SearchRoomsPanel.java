@@ -168,7 +168,8 @@ public class SearchRoomsPanel extends JPanel {
                 if (!roomType.equals("All Types") && !room.getRoomType().equals(roomType)) continue;
                 if (!capacityStr.equals("All Capacities") && room.getCapacity() != Integer.parseInt(capacityStr)) continue;
                 
-                double price = room.getPricePerNight();
+                // FIX: getPricePerNight() returns BigDecimal; extract double for comparison
+                double price = room.getPricePerNight().doubleValue();
                 if (price < minPrice || price > maxPrice) continue;
                 
                 tableModel.addRow(new Object[]{

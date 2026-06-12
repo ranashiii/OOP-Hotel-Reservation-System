@@ -49,13 +49,13 @@ public class ReceptionistDashboard extends JFrame {
         
         add(topPanel, BorderLayout.NORTH);
         
-        // Tabbed pane
+        // Tabbed pane - each tab uses the real functional panel
         tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Dashboard", new ReceptionistMainPanel());
-        tabbedPane.addTab("Check-in", new JLabel("Check-in Panel"));
-        tabbedPane.addTab("Check-out", new JLabel("Check-out Panel"));
-        tabbedPane.addTab("Payments", new JLabel("Payment Panel"));
-        tabbedPane.addTab("Reservations", new JLabel("Reservations Panel"));
+        tabbedPane.addTab("Dashboard",      new ReceptionistMainPanel());
+        tabbedPane.addTab("Register Guest", new RegisterGuestPanel());
+        tabbedPane.addTab("Check-in",       new CheckInPanel());
+        tabbedPane.addTab("Check-out",      new CheckOutPanel());
+        tabbedPane.addTab("Payments",       new RecordPaymentPanel());
         
         add(tabbedPane, BorderLayout.CENTER);
     }

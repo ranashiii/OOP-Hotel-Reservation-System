@@ -160,8 +160,10 @@ public class CheckOutPanel extends JPanel {
             
             double lateCheckoutFee = 0;
             LocalTime actualCheckoutTime = LocalTime.now();
-            if (actualCheckoutTime.getHour() > 11) {
-                lateCheckoutFee = DateUtil.calculateLateCheckoutFee(actualCheckoutTime);
+            // FIX: calculateLateCheckoutFee requires (checkOutTime, standardCheckoutTime)
+            LocalTime standardCheckout = LocalTime.of(11, 0); // 11:00 AM standard checkout
+            if (actualCheckoutTime.isAfter(standardCheckout)) {
+                lateCheckoutFee = DateUtil.calculateLateCheckoutFee(actualCheckoutTime, standardCheckout);
             }
             
             lblLateCheckoutFee.setText(CurrencyUtil.formatCurrency(new BigDecimal(lateCheckoutFee)));

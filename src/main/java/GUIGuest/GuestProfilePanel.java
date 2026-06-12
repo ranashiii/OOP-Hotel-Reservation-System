@@ -256,7 +256,9 @@ public class GuestProfilePanel extends JPanel {
             currentGuest.setEmail(txtEmail.getText());
             currentGuest.setPhoneNumber(txtPhone.getText());
             currentGuest.setAddress(txtAddress.getText());
-            currentGuest.setDateOfBirth(LocalDate.parse(txtDateOfBirth.getText()));
+            // FIX: Guest.setDateOfBirth() expects java.util.Date; convert from LocalDate
+            java.time.LocalDate dob = java.time.LocalDate.parse(txtDateOfBirth.getText());
+            currentGuest.setDateOfBirth(java.sql.Date.valueOf(dob));
             currentGuest.setNationality(txtNationality.getText());
             currentGuest.setIdDocumentType(txtIdType.getText());
             currentGuest.setIdDocumentNumber(txtIdNumber.getText());

@@ -208,7 +208,8 @@ public class RegisterGuestPanel extends JPanel {
             newGuest.setEmail(email);
             newGuest.setPhoneNumber(phone);
             newGuest.setAddress(address);
-            newGuest.setDateOfBirth(dateOfBirth);
+            // FIX: Guest.setDateOfBirth() expects java.util.Date; convert from LocalDate
+            newGuest.setDateOfBirth(java.sql.Date.valueOf(dateOfBirth));
             newGuest.setNationality(nationality);
             newGuest.setIdDocumentType(idType);
             newGuest.setIdDocumentNumber(idNumber);

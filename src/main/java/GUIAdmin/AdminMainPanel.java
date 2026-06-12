@@ -16,11 +16,14 @@ import java.time.format.DateTimeFormatter;
  * @version 1.0.0
  */
 public class AdminMainPanel extends JPanel {
-    
+
     private JLabel totalRoomsLabel;
     private JLabel occupiedRoomsLabel;
     private JLabel availableRoomsLabel;
     private JLabel occupancyRateLabel;
+
+    // FIX: DashboardService has instance methods, not static ones - must instantiate
+    private final DashboardService dashboardService = new DashboardService();
     
     public AdminMainPanel() {
         setLayout(null);
@@ -80,10 +83,11 @@ public class AdminMainPanel extends JPanel {
     
     private void loadDashboardData() {
         try {
-            int totalRooms = DashboardService.getTotalRoomsCount();
-            int occupiedRooms = DashboardService.getOccupiedRoomsCount();
-            int availableRooms = DashboardService.getAvailableRoomsCount();
-            double occupancyRate = DashboardService.getOccupancyRate();
+            // FIX: use the instance field, not static class references
+            int totalRooms = dashboardService.getTotalRoomsCount();
+            int occupiedRooms = dashboardService.getOccupiedRoomsCount();
+            int availableRooms = dashboardService.getAvailableRoomsCount();
+            double occupancyRate = dashboardService.getOccupancyRate();
             
             totalRoomsLabel.setText(String.valueOf(totalRooms));
             occupiedRoomsLabel.setText(String.valueOf(occupiedRooms));

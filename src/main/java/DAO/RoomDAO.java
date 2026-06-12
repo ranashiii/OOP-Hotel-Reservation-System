@@ -362,14 +362,7 @@ public class RoomDAO {
         return 0;
     }
     
-    /**
-     * Maps a ResultSet row to a Room object
-     * Helper method used by query methods
-     * 
-     * @param rs ResultSet containing room data
-     * @return Room object populated with data from ResultSet
-     * @throws SQLException if data extraction fails
-     */
+
     private Room mapResultSetToRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setRoomId(rs.getInt("room_id"));
@@ -381,8 +374,11 @@ public class RoomDAO {
         room.setAmenities(rs.getString("amenities"));
         room.setRoomImage(rs.getString("room_image"));
         room.setStatus(rs.getString("status"));
-        room.setCreatedAt(rs.getTimestamp("created_at"));
-        room.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        if (createdAt != null) room.setCreatedAt(createdAt.toLocalDateTime());
+        Timestamp updatedAt = rs.getTimestamp("updated_at");
+        if (updatedAt != null) room.setUpdatedAt(updatedAt.toLocalDateTime());
         return room;
     }
 }

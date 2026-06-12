@@ -91,13 +91,14 @@ public class MakeReservationPanel extends JDialog {
             spinnerGuests = new JSpinner(new SpinnerNumberModel(1, 1, room.getCapacity(), 1));
             panel.add(spinnerGuests);
             
-            double roomRate = room.getPricePerNight();
-            BigDecimal subtotal = CurrencyUtil.calculateSubtotal(new BigDecimal(roomRate), (int) nights);
+            // FIX: getPricePerNight() returns BigDecimal; use it directly, no double cast needed
+            BigDecimal roomRate = room.getPricePerNight();
+            BigDecimal subtotal = CurrencyUtil.calculateSubtotal(roomRate, (int) nights);
             BigDecimal tax = CurrencyUtil.calculateTax(subtotal);
             BigDecimal finalTotal = CurrencyUtil.calculateFinalTotal(subtotal, BigDecimal.ZERO);
-            
+
             panel.add(new JLabel("Room Rate/Night:"));
-            panel.add(new JLabel(CurrencyUtil.formatCurrency(new BigDecimal(roomRate))));
+            panel.add(new JLabel(CurrencyUtil.formatCurrency(roomRate)));
             
             panel.add(new JLabel("Subtotal:"));
             panel.add(new JLabel(CurrencyUtil.formatCurrency(subtotal)));

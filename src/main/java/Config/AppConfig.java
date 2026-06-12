@@ -26,6 +26,7 @@ public class AppConfig {
     
     // Colors - Secondary palette
     public static final Color COLOR_ACCENT = new Color(255, 152, 0);
+    public static final Color COLOR_SECONDARY = new Color(96, 125, 139); // Blue-grey for secondary actions
     public static final Color COLOR_ACCENT_DARK = new Color(255, 111, 0);
     
     // Colors - Status
@@ -52,6 +53,7 @@ public class AppConfig {
     public static final Font FONT_REGULAR = new Font("Arial", Font.PLAIN, 12);
     public static final Font FONT_SMALL = new Font("Arial", Font.PLAIN, 10);
     public static final Font FONT_BOLD = new Font("Arial", Font.BOLD, 12);
+    public static final Font FONT_BUTTON = new Font("Arial", Font.BOLD, 12);
     
     // Button sizes
     public static final int BUTTON_WIDTH = 120;

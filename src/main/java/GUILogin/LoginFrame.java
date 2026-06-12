@@ -201,11 +201,11 @@ public class LoginFrame extends JFrame implements ActionListener {
         
         try {
             // Authenticate user
-            User user = userService.authenticateUser(username, password);
+            User user = userService.login(username, password);
             
             if (user != null && user.isActive()) {
                 // Login successful - store session
-                SessionManager.getInstance().login(user);
+                SessionManager.getInstance().initializeSession(user);
                 
                 // Close login frame
                 this.dispose();
