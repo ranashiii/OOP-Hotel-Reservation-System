@@ -69,7 +69,7 @@ public class RecordPaymentPanel extends JPanel {
         panel.add(txtReservationId);
         
         btnSearch = new JButton("Search");
-        btnSearch.setBackground(new Color(33, 150, 243));
+        btnSearch.setBackground(new Color(25, 118, 210));
         btnSearch.setForeground(Color.WHITE);
         btnSearch.addActionListener(e -> searchReservation());
         panel.add(btnSearch);

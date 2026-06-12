@@ -121,6 +121,8 @@ public class GuestProfilePanel extends JPanel {
         buttonPanel.setBackground(Color.WHITE);
         
         btnEditProfile = new JButton("Edit Profile");
+        btnEditProfile.setBackground(new Color(255, 152, 0));
+        btnEditProfile.setForeground(Color.WHITE);
         btnEditProfile.addActionListener(e -> enableEditMode());
         buttonPanel.add(btnEditProfile);
         

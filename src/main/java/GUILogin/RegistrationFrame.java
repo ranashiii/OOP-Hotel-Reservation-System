@@ -41,7 +41,7 @@ public class RegistrationFrame extends JDialog implements ActionListener {
      */
     public RegistrationFrame(JFrame parent) {
         super(parent, "Create New Account", true);
-        setSize(460, 410);
+        setSize(460, 450);
         setLocationRelativeTo(parent);
         setLayout(null);
         setResizable(false);

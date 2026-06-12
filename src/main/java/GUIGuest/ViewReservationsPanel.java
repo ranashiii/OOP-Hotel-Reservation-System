@@ -62,6 +62,8 @@ public class ViewReservationsPanel extends JPanel {
         panel.add(cmbStatus);
         
         btnRefresh = new JButton("Refresh");
+        btnRefresh.setBackground(new Color(25, 118, 210));
+        btnRefresh.setForeground(Color.WHITE);
         btnRefresh.addActionListener(e -> loadReservations());
         panel.add(btnRefresh);
         
@@ -96,7 +98,7 @@ public class ViewReservationsPanel extends JPanel {
         panel.setBackground(Color.WHITE);
         
         btnViewDetails = new JButton("View Details");
-        btnViewDetails.setBackground(new Color(33, 150, 243));
+        btnViewDetails.setBackground(new Color(25, 118, 210));
         btnViewDetails.setForeground(Color.WHITE);
         btnViewDetails.addActionListener(e -> viewDetails());
         panel.add(btnViewDetails);
