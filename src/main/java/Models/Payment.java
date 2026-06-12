@@ -1,5 +1,6 @@
 package Models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -7,8 +8,10 @@ import java.time.LocalTime;
 /**
  * Payment - Payment Model Class
  * 
- * Represents a payment transaction for a reservation including payment method,
- * amount, status, and refund information.
+ * Represents a payment transaction for a reservation.
+ * Tracks payment amount, method, status, and refund information.
+ * 
+ * Properties include payment details, amounts, timestamps, and refund tracking.
  * 
  * @author Hotel Reservation System Team
  * @version 1.0.0
@@ -17,13 +20,13 @@ public class Payment {
     
     private int paymentId;
     private int reservationId;
-    private double paymentAmount;
+    private BigDecimal paymentAmount;
     private String paymentMethod;
     private String paymentTypeDetails;
     private String paymentStatus;
     private LocalDate paymentDate;
     private LocalTime paymentTime;
-    private double refundAmount;
+    private BigDecimal refundAmount;
     private LocalDate refundDate;
     private String refundReason;
     private String transactionId;
@@ -31,16 +34,54 @@ public class Payment {
     private LocalDateTime updatedAt;
     
     // ============ CONSTRUCTORS ============
-    public Payment() {}
     
-    public Payment(int reservationId, double paymentAmount, String paymentMethod) {
+    /**
+     * Default constructor
+     */
+    public Payment() {
+    }
+    
+    /**
+     * Constructor with essential payment information
+     * 
+     * @param reservationId the reservation ID
+     * @param paymentAmount the payment amount
+     * @param paymentMethod the payment method (Cash, Credit Card, E-Wallet)
+     */
+    public Payment(int reservationId, BigDecimal paymentAmount, String paymentMethod) {
         this.reservationId = reservationId;
         this.paymentAmount = paymentAmount;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = "Pending";
+        this.refundAmount = BigDecimal.ZERO;
+    }
+    
+    /**
+     * Constructor with complete payment details
+     * 
+     * @param reservationId the reservation ID
+     * @param paymentAmount the payment amount
+     * @param paymentMethod the payment method
+     * @param paymentTypeDetails additional payment details
+     * @param paymentStatus the payment status
+     * @param paymentDate the payment date
+     * @param paymentTime the payment time
+     */
+    public Payment(int reservationId, BigDecimal paymentAmount, String paymentMethod,
+                   String paymentTypeDetails, String paymentStatus, LocalDate paymentDate,
+                   LocalTime paymentTime) {
+        this.reservationId = reservationId;
+        this.paymentAmount = paymentAmount;
+        this.paymentMethod = paymentMethod;
+        this.paymentTypeDetails = paymentTypeDetails;
+        this.paymentStatus = paymentStatus;
+        this.paymentDate = paymentDate;
+        this.paymentTime = paymentTime;
+        this.refundAmount = BigDecimal.ZERO;
     }
     
     // ============ GETTERS & SETTERS ============
+    
     public int getPaymentId() {
         return paymentId;
     }
@@ -57,11 +98,11 @@ public class Payment {
         this.reservationId = reservationId;
     }
     
-    public double getPaymentAmount() {
+    public BigDecimal getPaymentAmount() {
         return paymentAmount;
     }
     
-    public void setPaymentAmount(double paymentAmount) {
+    public void setPaymentAmount(BigDecimal paymentAmount) {
         this.paymentAmount = paymentAmount;
     }
     
@@ -105,11 +146,11 @@ public class Payment {
         this.paymentTime = paymentTime;
     }
     
-    public double getRefundAmount() {
+    public BigDecimal getRefundAmount() {
         return refundAmount;
     }
     
-    public void setRefundAmount(double refundAmount) {
+    public void setRefundAmount(BigDecimal refundAmount) {
         this.refundAmount = refundAmount;
     }
     
@@ -154,32 +195,122 @@ public class Payment {
     }
     
     // ============ UTILITY METHODS ============
+    
+    /**
+     * Check if payment is pending
+     * 
+     * @return true if status is "Pending"
+     */
     public boolean isPending() {
         return "Pending".equalsIgnoreCase(this.paymentStatus);
     }
     
+    /**
+     * Check if payment is completed
+     * 
+     * @return true if status is "Completed"
+     */
     public boolean isCompleted() {
         return "Completed".equalsIgnoreCase(this.paymentStatus);
     }
     
+    /**
+     * Check if payment failed
+     * 
+     * @return true if status is "Failed"
+     */
     public boolean isFailed() {
         return "Failed".equalsIgnoreCase(this.paymentStatus);
     }
     
+    /**
+     * Check if payment has been refunded
+     * 
+     * @return true if status is "Refunded"
+     */
     public boolean isRefunded() {
         return "Refunded".equalsIgnoreCase(this.paymentStatus);
     }
     
-    public boolean isCashPayment() {
+    /**
+     * Check if payment is by cash
+     * 
+     * @return true if payment method is "Cash"
+     */
+    public boolean isCash() {
         return "Cash".equalsIgnoreCase(this.paymentMethod);
     }
     
-    public boolean isCreditCardPayment() {
+    /**
+     * Check if payment is by credit card
+     * 
+     * @return true if payment method is "Credit Card"
+     */
+    public boolean isCreditCard() {
         return "Credit Card".equalsIgnoreCase(this.paymentMethod);
     }
     
-    public boolean isEWalletPayment() {
+    /**
+     * Check if payment is by e-wallet
+     * 
+     * @return true if payment method is "E-Wallet"
+     */
+    public boolean isEWallet() {
         return "E-Wallet".equalsIgnoreCase(this.paymentMethod);
+    }
+    
+    /**
+     * Get formatted payment amount for display
+     * 
+     * @return formatted amount (e.g., "PHP 28,000.00")
+     */
+    public String getFormattedPaymentAmount() {
+        return Utilities.CurrencyUtil.formatCurrency(paymentAmount);
+    }
+    
+    /**
+     * Get formatted refund amount for display
+     * 
+     * @return formatted refund amount (e.g., "PHP 28,000.00")
+     */
+    public String getFormattedRefundAmount() {
+        return Utilities.CurrencyUtil.formatCurrency(refundAmount);
+    }
+    
+    /**
+     * Get payment method display name
+     * Returns a friendly display name for the payment method
+     * 
+     * @return payment method display name
+     */
+    public String getPaymentMethodDisplay() {
+        if (paymentMethod == null) {
+            return "Unknown";
+        }
+        
+        if (isCash()) {
+            return "Cash";
+        } else if (isCreditCard()) {
+            return "Credit Card" + (paymentTypeDetails != null ? " - " + paymentTypeDetails : "");
+        } else if (isEWallet()) {
+            return "E-Wallet" + (paymentTypeDetails != null ? " - " + paymentTypeDetails : "");
+        }
+        
+        return paymentMethod;
+    }
+    
+    /**
+     * Get payment status display name
+     * Returns a friendly display name for the payment status
+     * 
+     * @return status display name
+     */
+    public String getPaymentStatusDisplay() {
+        if (paymentStatus == null) {
+            return "Unknown";
+        }
+        
+        return paymentStatus;
     }
     
     @Override
@@ -190,6 +321,11 @@ public class Payment {
                 ", paymentAmount=" + paymentAmount +
                 ", paymentMethod='" + paymentMethod + '\'' +
                 ", paymentStatus='" + paymentStatus + '\'' +
+                ", paymentDate=" + paymentDate +
+                ", paymentTime=" + paymentTime +
+                ", refundAmount=" + refundAmount +
+                ", transactionId='" + transactionId + '\'' +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

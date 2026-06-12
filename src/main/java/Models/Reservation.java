@@ -10,6 +10,12 @@ import java.time.LocalTime;
  * 
  * Represents a hotel room reservation with guest, room, dates, pricing,
  * and status tracking. Core model for the reservation system.
+ * 
+ * Properties include guest/room IDs, dates, times, pricing, status, and timestamps.
+ * Supports complete reservation lifecycle from creation to cancellation.
+ * 
+ * @author Hotel Reservation System Team
+ * @version 2.0.0
  */
 public class Reservation {
     
@@ -35,8 +41,22 @@ public class Reservation {
     private LocalDateTime updatedAt;
     
     // ============ CONSTRUCTORS ============
-    public Reservation() {}
     
+    /**
+     * Default constructor
+     */
+    public Reservation() {
+    }
+    
+    /**
+     * Constructor with essential reservation information
+     * 
+     * @param guestId the guest ID
+     * @param roomId the room ID
+     * @param checkInDate the check-in date
+     * @param checkOutDate the check-out date
+     * @param numberOfGuests the number of guests
+     */
     public Reservation(int guestId, int roomId, LocalDate checkInDate, 
                        LocalDate checkOutDate, int numberOfGuests) {
         this.guestId = guestId;
@@ -46,9 +66,41 @@ public class Reservation {
         this.numberOfGuests = numberOfGuests;
         this.reservationStatus = "Confirmed";
         this.discountApplied = BigDecimal.ZERO;
+        this.reservationDate = LocalDate.now();
+    }
+    
+    /**
+     * Constructor with complete reservation details
+     * 
+     * @param guestId the guest ID
+     * @param roomId the room ID
+     * @param checkInDate the check-in date
+     * @param checkOutDate the check-out date
+     * @param numberOfGuests the number of guests
+     * @param numberOfNights the number of nights
+     * @param roomRate the room rate per night
+     * @param totalPrice the total price before tax
+     * @param finalTotal the final total after tax and discount
+     */
+    public Reservation(int guestId, int roomId, LocalDate checkInDate, LocalDate checkOutDate,
+                       int numberOfGuests, int numberOfNights, BigDecimal roomRate,
+                       BigDecimal totalPrice, BigDecimal finalTotal) {
+        this.guestId = guestId;
+        this.roomId = roomId;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.numberOfGuests = numberOfGuests;
+        this.numberOfNights = numberOfNights;
+        this.roomRate = roomRate;
+        this.totalPrice = totalPrice;
+        this.finalTotal = finalTotal;
+        this.reservationStatus = "Confirmed";
+        this.discountApplied = BigDecimal.ZERO;
+        this.reservationDate = LocalDate.now();
     }
     
     // ============ GETTERS & SETTERS ============
+    
     public int getReservationId() {
         return reservationId;
     }
@@ -210,20 +262,109 @@ public class Reservation {
     }
     
     // ============ UTILITY METHODS ============
+    
+    /**
+     * Check if reservation is confirmed
+     * 
+     * @return true if status is "Confirmed"
+     */
     public boolean isConfirmed() {
-        return "Confirmed".equalsIgnoreCase(reservationStatus);
+        return "Confirmed".equalsIgnoreCase(this.reservationStatus);
     }
     
+    /**
+     * Check if guest has checked in
+     * 
+     * @return true if status is "Checked-In"
+     */
     public boolean isCheckedIn() {
-        return "Checked-In".equalsIgnoreCase(reservationStatus);
+        return "Checked-In".equalsIgnoreCase(this.reservationStatus);
     }
     
+    /**
+     * Check if guest has checked out
+     * 
+     * @return true if status is "Checked-Out"
+     */
     public boolean isCheckedOut() {
-        return "Checked-Out".equalsIgnoreCase(reservationStatus);
+        return "Checked-Out".equalsIgnoreCase(this.reservationStatus);
     }
     
+    /**
+     * Check if reservation is cancelled
+     * 
+     * @return true if status is "Cancelled"
+     */
     public boolean isCancelled() {
-        return "Cancelled".equalsIgnoreCase(reservationStatus);
+        return "Cancelled".equalsIgnoreCase(this.reservationStatus);
+    }
+    
+    /**
+     * Get balance due (final total - already paid)
+     * Note: This requires payment records to be checked separately
+     * 
+     * @return final total (balance due if no payments made)
+     */
+    public BigDecimal getBalanceDue() {
+        return finalTotal != null ? finalTotal : BigDecimal.ZERO;
+    }
+    
+    /**
+     * Get formatted final total for display
+     * 
+     * @return formatted total (e.g., "PHP 28,000.00")
+     */
+    public String getFormattedFinalTotal() {
+        return Utilities.CurrencyUtil.formatCurrency(finalTotal);
+    }
+    
+    /**
+     * Get reservation duration description
+     * 
+     * @return description like "3 nights (Jan 15 - Jan 18)"
+     */
+    public String getDurationDescription() {
+        if (checkInDate == null || checkOutDate == null) {
+            return "N/A";
+        }
+        return numberOfNights + " nights (" + checkInDate + " - " + checkOutDate + ")";
+    }
+    
+    /**
+     * Check if reservation is in the past
+     * 
+     * @return true if check-out date has passed
+     */
+    public boolean isPast() {
+        if (checkOutDate == null) {
+            return false;
+        }
+        return checkOutDate.isBefore(LocalDate.now());
+    }
+    
+    /**
+     * Check if reservation is upcoming
+     * 
+     * @return true if check-in date is in the future
+     */
+    public boolean isUpcoming() {
+        if (checkInDate == null) {
+            return false;
+        }
+        return checkInDate.isAfter(LocalDate.now());
+    }
+    
+    /**
+     * Check if reservation is currently active (during stay)
+     * 
+     * @return true if today is between check-in and check-out dates
+     */
+    public boolean isActive() {
+        LocalDate today = LocalDate.now();
+        if (checkInDate == null || checkOutDate == null) {
+            return false;
+        }
+        return !today.isBefore(checkInDate) && today.isBefore(checkOutDate);
     }
     
     @Override
@@ -234,9 +375,13 @@ public class Reservation {
                 ", roomId=" + roomId +
                 ", checkInDate=" + checkInDate +
                 ", checkOutDate=" + checkOutDate +
+                ", numberOfGuests=" + numberOfGuests +
+                ", reservationStatus='" + reservationStatus + '\'' +
                 ", numberOfNights=" + numberOfNights +
+                ", roomRate=" + roomRate +
+                ", totalPrice=" + totalPrice +
                 ", finalTotal=" + finalTotal +
-                ", status='" + reservationStatus + '\'' +
+                ", reservationDate=" + reservationDate +
                 '}';
     }
 }

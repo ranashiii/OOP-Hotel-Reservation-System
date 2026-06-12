@@ -1,5 +1,6 @@
 package Models;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -8,8 +9,10 @@ import java.time.LocalDateTime;
  * Represents a hotel room with its properties, status, and amenities.
  * Used for room management and availability checking.
  * 
+ * Properties include room details, pricing, amenities, status, and timestamps.
+ * 
  * @author Hotel Reservation System Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 public class Room {
     
@@ -18,7 +21,7 @@ public class Room {
     private String roomType;
     private int floor;
     private int capacity;
-    private double pricePerNight;
+    private BigDecimal pricePerNight;  // Fixed: Changed from double to BigDecimal for currency precision
     private String amenities;
     private String roomImage;
     private String status;
@@ -26,9 +29,23 @@ public class Room {
     private LocalDateTime updatedAt;
     
     // ============ CONSTRUCTORS ============
-    public Room() {}
     
-    public Room(String roomNumber, String roomType, int floor, int capacity, double pricePerNight) {
+    /**
+     * Default constructor
+     */
+    public Room() {
+    }
+    
+    /**
+     * Constructor with essential room information
+     * 
+     * @param roomNumber the room number
+     * @param roomType the type of room
+     * @param floor the floor number
+     * @param capacity the room capacity (number of guests)
+     * @param pricePerNight the price per night
+     */
+    public Room(String roomNumber, String roomType, int floor, int capacity, BigDecimal pricePerNight) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.floor = floor;
@@ -37,7 +54,30 @@ public class Room {
         this.status = "Available";
     }
     
+    /**
+     * Constructor with all details
+     * 
+     * @param roomNumber the room number
+     * @param roomType the type of room
+     * @param floor the floor number
+     * @param capacity the room capacity
+     * @param pricePerNight the price per night
+     * @param amenities the amenities description
+     * @param status the current room status
+     */
+    public Room(String roomNumber, String roomType, int floor, int capacity, 
+                BigDecimal pricePerNight, String amenities, String status) {
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.floor = floor;
+        this.capacity = capacity;
+        this.pricePerNight = pricePerNight;
+        this.amenities = amenities;
+        this.status = status;
+    }
+    
     // ============ GETTERS & SETTERS ============
+    
     public int getRoomId() {
         return roomId;
     }
@@ -78,12 +118,33 @@ public class Room {
         this.capacity = capacity;
     }
     
-    public double getPricePerNight() {
+    /**
+     * Get price per night as BigDecimal
+     * Uses BigDecimal for precise currency calculations
+     * 
+     * @return price per night
+     */
+    public BigDecimal getPricePerNight() {
         return pricePerNight;
     }
     
-    public void setPricePerNight(double pricePerNight) {
+    /**
+     * Set price per night as BigDecimal
+     * 
+     * @param pricePerNight the price per night
+     */
+    public void setPricePerNight(BigDecimal pricePerNight) {
         this.pricePerNight = pricePerNight;
+    }
+    
+    /**
+     * Set price per night from double (for convenience)
+     * Converts double to BigDecimal with 2 decimal places
+     * 
+     * @param pricePerNight the price per night as double
+     */
+    public void setPricePerNight(double pricePerNight) {
+        this.pricePerNight = new BigDecimal(pricePerNight).setScale(2, java.math.RoundingMode.HALF_UP);
     }
     
     public String getAmenities() {
@@ -127,20 +188,50 @@ public class Room {
     }
     
     // ============ UTILITY METHODS ============
+    
+    /**
+     * Check if room is available
+     * 
+     * @return true if room status is "Available"
+     */
     public boolean isAvailable() {
         return "Available".equalsIgnoreCase(this.status);
     }
     
+    /**
+     * Check if room is occupied
+     * 
+     * @return true if room status is "Occupied"
+     */
     public boolean isOccupied() {
         return "Occupied".equalsIgnoreCase(this.status);
     }
     
+    /**
+     * Check if room is under maintenance
+     * 
+     * @return true if room status is "Maintenance"
+     */
     public boolean isUnderMaintenance() {
         return "Maintenance".equalsIgnoreCase(this.status);
     }
     
+    /**
+     * Check if room is being cleaned
+     * 
+     * @return true if room status is "Cleaning"
+     */
     public boolean isCleaning() {
         return "Cleaning".equalsIgnoreCase(this.status);
+    }
+    
+    /**
+     * Get formatted price for display
+     * 
+     * @return formatted price string (e.g., "PHP 5,000.00")
+     */
+    public String getFormattedPrice() {
+        return Utilities.CurrencyUtil.formatCurrency(pricePerNight);
     }
     
     @Override
@@ -152,7 +243,10 @@ public class Room {
                 ", floor=" + floor +
                 ", capacity=" + capacity +
                 ", pricePerNight=" + pricePerNight +
+                ", amenities='" + amenities + '\'' +
                 ", status='" + status + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

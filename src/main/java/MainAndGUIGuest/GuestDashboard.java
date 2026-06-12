@@ -1,5 +1,7 @@
 package MainAndGUIGuest;
 
+import GUILogin.LoginFrame;
+import HotelReservationMainSystem.SessionManager;
 import Manager.SessionManager;
 import OtherGUILoginRegistration.LoginFrame;
 import Utilities.Logger;
