@@ -28,8 +28,9 @@ public class RegisterGuestPanel extends JPanel {
     private UserDAO userDAO;
     
     private JTextField txtUsername, txtEmail, txtFirstName, txtLastName, txtMiddleName;
-    private JTextField txtPhone, txtAddress, txtDateOfBirth, txtNationality, txtIdType, txtIdNumber;
+    private JTextField txtPhone, txtAddress, txtDateOfBirth, txtNationality, txtIdNumber;
     private JPasswordField txtPassword, txtConfirmPassword;
+    private JComboBox<String> txtIdType;
     private JButton btnRegister, btnReset;
     
     public RegisterGuestPanel() {
@@ -104,9 +105,7 @@ public class RegisterGuestPanel extends JPanel {
         panel.add(txtNationality);
         
         panel.add(new JLabel("ID Document Type:"));
-        txtIdType = new JComboBox<>(new String[]{"Passport", "Driver's License", "National ID", "Postal ID"}).getComponent(0) instanceof JComboBox ?
-            (JTextField) new JComboBox<>(new String[]{"Passport", "Driver's License", "National ID", "Postal ID"}) :
-            new JTextField();
+        txtIdType = new JComboBox<>(new String[]{"Passport", "Driver's License", "National ID", "Postal ID"});
         panel.add(txtIdType);
         
         panel.add(new JLabel("ID Document Number:"));
@@ -148,7 +147,7 @@ public class RegisterGuestPanel extends JPanel {
             String address = txtAddress.getText().trim();
             String dateOfBirthStr = txtDateOfBirth.getText().trim();
             String nationality = txtNationality.getText().trim();
-            String idType = txtIdType.getText().trim();
+            String idType = (String) txtIdType.getSelectedItem();
             String idNumber = txtIdNumber.getText().trim();
             
             if (username.isEmpty() || password.isEmpty() || email.isEmpty() || 
@@ -236,7 +235,7 @@ public class RegisterGuestPanel extends JPanel {
         txtAddress.setText("");
         txtDateOfBirth.setText("");
         txtNationality.setText("");
-        txtIdType.setText("");
+        txtIdType.setSelectedIndex(0);
         txtIdNumber.setText("");
     }
 }
