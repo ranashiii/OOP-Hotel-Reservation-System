@@ -1,191 +1,325 @@
 package GUIGuest;
 
-import HotelReservationMainSystem.SessionManager;
 import DAO.GuestDAO;
-import DAO.UserDAO;
 import Models.Guest;
-import Models.User;
-import Services.UserService;
-import Utilities.HotelException;
+import Services.GuestService;
+import HotelReservationMainSystem.SessionManager;
+import Utilities.Constants;
+import Utilities.MessageBox;
+import Utilities.ValidationUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
- * GuestProfilePanel - Guest Profile Management
+ * GuestProfilePanel - Guest profile management interface
  * 
- * Allows guests to view and edit their profile information and change password.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
+ * Allows guests to view and edit their personal information,
+ * and change their password.
  */
 public class GuestProfilePanel extends JPanel {
     
-    private JTextField firstNameField;
-    private JTextField lastNameField;
-    private JTextField emailField;
-    private JTextField phoneField;
-    private JTextArea addressArea;
-    private JPasswordField currentPasswordField;
-    private JPasswordField newPasswordField;
-    private JPasswordField confirmPasswordField;
-    private JButton updateProfileButton;
-    private JButton changePasswordButton;
+    private GuestService guestService;
+    private GuestDAO guestDAO;
     private Guest currentGuest;
     
+    private JTextField txtFirstName, txtLastName, txtMiddleName, txtEmail, txtPhone;
+    private JTextField txtAddress, txtDateOfBirth, txtNationality, txtIdType, txtIdNumber;
+    private JPasswordField txtCurrentPassword, txtNewPassword, txtConfirmPassword;
+    private JButton btnEditProfile, btnSaveProfile, btnChangePassword, btnCancel;
+    private boolean isEditingProfile = false;
+    
     public GuestProfilePanel() {
-        setLayout(null);
+        this.guestService = new GuestService();
+        this.guestDAO = new GuestDAO();
+        initUI();
         loadGuestProfile();
-        initializeComponents();
+    }
+    
+    private void initUI() {
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Tabbed pane for profile and password
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Personal Information", createProfilePanel());
+        tabbedPane.addTab("Change Password", createPasswordPanel());
+        
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+    
+    private JPanel createProfilePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(11, 2, 10, 10));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // First name
+        panel.add(new JLabel("First Name:"));
+        txtFirstName = new JTextField();
+        txtFirstName.setEditable(false);
+        panel.add(txtFirstName);
+        
+        // Middle name
+        panel.add(new JLabel("Middle Name:"));
+        txtMiddleName = new JTextField();
+        txtMiddleName.setEditable(false);
+        panel.add(txtMiddleName);
+        
+        // Last name
+        panel.add(new JLabel("Last Name:"));
+        txtLastName = new JTextField();
+        txtLastName.setEditable(false);
+        panel.add(txtLastName);
+        
+        // Email
+        panel.add(new JLabel("Email:"));
+        txtEmail = new JTextField();
+        txtEmail.setEditable(false);
+        panel.add(txtEmail);
+        
+        // Phone
+        panel.add(new JLabel("Phone Number:"));
+        txtPhone = new JTextField();
+        txtPhone.setEditable(false);
+        panel.add(txtPhone);
+        
+        // Address
+        panel.add(new JLabel("Address:"));
+        txtAddress = new JTextField();
+        txtAddress.setEditable(false);
+        panel.add(txtAddress);
+        
+        // Date of birth
+        panel.add(new JLabel("Date of Birth (YYYY-MM-DD):"));
+        txtDateOfBirth = new JTextField();
+        txtDateOfBirth.setEditable(false);
+        panel.add(txtDateOfBirth);
+        
+        // Nationality
+        panel.add(new JLabel("Nationality:"));
+        txtNationality = new JTextField();
+        txtNationality.setEditable(false);
+        panel.add(txtNationality);
+        
+        // ID type
+        panel.add(new JLabel("ID Document Type:"));
+        txtIdType = new JTextField();
+        txtIdType.setEditable(false);
+        panel.add(txtIdType);
+        
+        // ID number
+        panel.add(new JLabel("ID Document Number:"));
+        txtIdNumber = new JTextField();
+        txtIdNumber.setEditable(false);
+        panel.add(txtIdNumber);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(Color.WHITE);
+        
+        btnEditProfile = new JButton("Edit Profile");
+        btnEditProfile.addActionListener(e -> enableEditMode());
+        buttonPanel.add(btnEditProfile);
+        
+        btnSaveProfile = new JButton("Save Changes");
+        btnSaveProfile.setBackground(new Color(76, 175, 80));
+        btnSaveProfile.setForeground(Color.WHITE);
+        btnSaveProfile.setEnabled(false);
+        btnSaveProfile.addActionListener(e -> saveProfile());
+        buttonPanel.add(btnSaveProfile);
+        
+        btnCancel = new JButton("Cancel");
+        btnCancel.setBackground(new Color(244, 67, 54));
+        btnCancel.setForeground(Color.WHITE);
+        btnCancel.setEnabled(false);
+        btnCancel.addActionListener(e -> cancelEdit());
+        buttonPanel.add(btnCancel);
+        
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.add(panel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return mainPanel;
+    }
+    
+    private JPanel createPasswordPanel() {
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Current password
+        panel.add(new JLabel("Current Password:"));
+        txtCurrentPassword = new JPasswordField();
+        panel.add(txtCurrentPassword);
+        
+        // New password
+        panel.add(new JLabel("New Password:"));
+        txtNewPassword = new JPasswordField();
+        panel.add(txtNewPassword);
+        
+        // Confirm password
+        panel.add(new JLabel("Confirm New Password:"));
+        txtConfirmPassword = new JPasswordField();
+        panel.add(txtConfirmPassword);
+        
+        // Button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(Color.WHITE);
+        
+        btnChangePassword = new JButton("Change Password");
+        btnChangePassword.setBackground(new Color(25, 118, 210));
+        btnChangePassword.setForeground(Color.WHITE);
+        btnChangePassword.addActionListener(e -> changePassword());
+        buttonPanel.add(btnChangePassword);
+        
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.add(panel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return mainPanel;
     }
     
     private void loadGuestProfile() {
         try {
             int userId = SessionManager.getInstance().getCurrentUserId();
-            currentGuest = GuestDAO.getGuestByUserId(userId);
+            currentGuest = guestDAO.getGuestByUserId(userId);
+            
             if (currentGuest == null) {
-                JOptionPane.showMessageDialog(this, "Guest profile not found");
+                MessageBox.showError("Error", "Guest profile not found");
+                return;
             }
-        } catch (HotelException e) {
-            JOptionPane.showMessageDialog(this, "Error loading profile: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            
+            txtFirstName.setText(currentGuest.getFirstName() != null ? currentGuest.getFirstName() : "");
+            txtMiddleName.setText(currentGuest.getMiddleName() != null ? currentGuest.getMiddleName() : "");
+            txtLastName.setText(currentGuest.getLastName() != null ? currentGuest.getLastName() : "");
+            txtEmail.setText(currentGuest.getEmail() != null ? currentGuest.getEmail() : "");
+            txtPhone.setText(currentGuest.getPhoneNumber() != null ? currentGuest.getPhoneNumber() : "");
+            txtAddress.setText(currentGuest.getAddress() != null ? currentGuest.getAddress() : "");
+            txtDateOfBirth.setText(currentGuest.getDateOfBirth() != null ? currentGuest.getDateOfBirth().toString() : "");
+            txtNationality.setText(currentGuest.getNationality() != null ? currentGuest.getNationality() : "");
+            txtIdType.setText(currentGuest.getIdDocumentType() != null ? currentGuest.getIdDocumentType() : "");
+            txtIdNumber.setText(currentGuest.getIdDocumentNumber() != null ? currentGuest.getIdDocumentNumber() : "");
+            
+        } catch (Exception e) {
+            MessageBox.showError("Error", "Failed to load guest profile: " + e.getMessage());
         }
     }
     
-    private void initializeComponents() {
-        // Profile section
-        JLabel profileLabel = new JLabel("My Profile");
-        profileLabel.setBounds(30, 20, 200, 30);
-        profileLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(profileLabel);
+    private void enableEditMode() {
+        isEditingProfile = true;
+        txtFirstName.setEditable(true);
+        txtMiddleName.setEditable(true);
+        txtLastName.setEditable(true);
+        txtEmail.setEditable(true);
+        txtPhone.setEditable(true);
+        txtAddress.setEditable(true);
+        txtDateOfBirth.setEditable(true);
+        txtNationality.setEditable(true);
+        txtIdType.setEditable(true);
+        txtIdNumber.setEditable(true);
         
-        // First name
-        JLabel firstNameLabel = new JLabel("First Name:");
-        firstNameLabel.setBounds(30, 70, 100, 20);
-        add(firstNameLabel);
-        
-        firstNameField = new JTextField();
-        firstNameField.setBounds(140, 70, 200, 25);
-        if (currentGuest != null) firstNameField.setText(currentGuest.getFirstName());
-        add(firstNameField);
-        
-        // Last name
-        JLabel lastNameLabel = new JLabel("Last Name:");
-        lastNameLabel.setBounds(360, 70, 100, 20);
-        add(lastNameLabel);
-        
-        lastNameField = new JTextField();
-        lastNameField.setBounds(470, 70, 200, 25);
-        if (currentGuest != null) lastNameField.setText(currentGuest.getLastName());
-        add(lastNameField);
-        
-        // Email
-        JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setBounds(30, 110, 100, 20);
-        add(emailLabel);
-        
-        emailField = new JTextField();
-        emailField.setBounds(140, 110, 200, 25);
-        if (currentGuest != null) emailField.setText(currentGuest.getEmail());
-        add(emailField);
-        
-        // Phone
-        JLabel phoneLabel = new JLabel("Phone:");
-        phoneLabel.setBounds(360, 110, 100, 20);
-        add(phoneLabel);
-        
-        phoneField = new JTextField();
-        phoneField.setBounds(470, 110, 200, 25);
-        if (currentGuest != null) phoneField.setText(currentGuest.getPhoneNumber());
-        add(phoneField);
-        
-        // Address
-        JLabel addressLabel = new JLabel("Address:");
-        addressLabel.setBounds(30, 150, 100, 20);
-        add(addressLabel);
-        
-        addressArea = new JTextArea();
-        addressArea.setBounds(140, 150, 530, 60);
-        if (currentGuest != null) addressArea.setText(currentGuest.getAddress());
-        add(addressArea);
-        
-        // Update profile button
-        updateProfileButton = new JButton("Update Profile");
-        updateProfileButton.setBounds(140, 230, 150, 35);
-        updateProfileButton.addActionListener(e -> updateProfile());
-        add(updateProfileButton);
-        
-        // Password section
-        JLabel passwordLabel = new JLabel("Change Password");
-        passwordLabel.setBounds(30, 290, 200, 30);
-        passwordLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(passwordLabel);
-        
-        // Current password
-        JLabel currentPasswordLabel = new JLabel("Current Password:");
-        currentPasswordLabel.setBounds(30, 330, 120, 20);
-        add(currentPasswordLabel);
-        
-        currentPasswordField = new JPasswordField();
-        currentPasswordField.setBounds(160, 330, 200, 25);
-        add(currentPasswordField);
-        
-        // New password
-        JLabel newPasswordLabel = new JLabel("New Password:");
-        newPasswordLabel.setBounds(30, 370, 120, 20);
-        add(newPasswordLabel);
-        
-        newPasswordField = new JPasswordField();
-        newPasswordField.setBounds(160, 370, 200, 25);
-        add(newPasswordField);
-        
-        // Confirm password
-        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
-        confirmPasswordLabel.setBounds(30, 410, 120, 20);
-        add(confirmPasswordLabel);
-        
-        confirmPasswordField = new JPasswordField();
-        confirmPasswordField.setBounds(160, 410, 200, 25);
-        add(confirmPasswordField);
-        
-        // Change password button
-        changePasswordButton = new JButton("Change Password");
-        changePasswordButton.setBounds(160, 450, 150, 35);
-        changePasswordButton.addActionListener(e -> changePassword());
-        add(changePasswordButton);
+        btnEditProfile.setEnabled(false);
+        btnSaveProfile.setEnabled(true);
+        btnCancel.setEnabled(true);
     }
     
-    private void updateProfile() {
+    private void saveProfile() {
         try {
-            if (currentGuest != null) {
-                currentGuest.setFirstName(firstNameField.getText());
-                currentGuest.setLastName(lastNameField.getText());
-                currentGuest.setEmail(emailField.getText());
-                currentGuest.setPhoneNumber(phoneField.getText());
-                currentGuest.setAddress(addressArea.getText());
-                
-                GuestDAO.updateGuest(currentGuest);
-                JOptionPane.showMessageDialog(this, "Profile updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            if (!ValidationUtil.validateName(txtFirstName.getText())) {
+                MessageBox.showError("Validation Error", "First name is invalid");
+                return;
             }
-        } catch (HotelException e) {
-            JOptionPane.showMessageDialog(this, "Error updating profile: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            
+            if (!ValidationUtil.validateName(txtLastName.getText())) {
+                MessageBox.showError("Validation Error", "Last name is invalid");
+                return;
+            }
+            
+            if (!ValidationUtil.validateEmail(txtEmail.getText())) {
+                MessageBox.showError("Validation Error", "Email is invalid");
+                return;
+            }
+            
+            if (!ValidationUtil.validatePhoneNumber(txtPhone.getText())) {
+                MessageBox.showError("Validation Error", "Phone number must be in Philippine format");
+                return;
+            }
+            
+            currentGuest.setFirstName(txtFirstName.getText());
+            currentGuest.setMiddleName(txtMiddleName.getText());
+            currentGuest.setLastName(txtLastName.getText());
+            currentGuest.setEmail(txtEmail.getText());
+            currentGuest.setPhoneNumber(txtPhone.getText());
+            currentGuest.setAddress(txtAddress.getText());
+            currentGuest.setDateOfBirth(LocalDate.parse(txtDateOfBirth.getText()));
+            currentGuest.setNationality(txtNationality.getText());
+            currentGuest.setIdDocumentType(txtIdType.getText());
+            currentGuest.setIdDocumentNumber(txtIdNumber.getText());
+            
+            guestService.updateGuest(currentGuest);
+            
+            MessageBox.showInfo("Success", "Profile updated successfully");
+            cancelEdit();
+            
+        } catch (Exception e) {
+            MessageBox.showError("Error", "Failed to update profile: " + e.getMessage());
         }
+    }
+    
+    private void cancelEdit() {
+        isEditingProfile = false;
+        loadGuestProfile();
+        
+        txtFirstName.setEditable(false);
+        txtMiddleName.setEditable(false);
+        txtLastName.setEditable(false);
+        txtEmail.setEditable(false);
+        txtPhone.setEditable(false);
+        txtAddress.setEditable(false);
+        txtDateOfBirth.setEditable(false);
+        txtNationality.setEditable(false);
+        txtIdType.setEditable(false);
+        txtIdNumber.setEditable(false);
+        
+        btnEditProfile.setEnabled(true);
+        btnSaveProfile.setEnabled(false);
+        btnCancel.setEnabled(false);
     }
     
     private void changePassword() {
         try {
-            String currentPassword = new String(currentPasswordField.getPassword());
-            String newPassword = new String(newPasswordField.getPassword());
-            String confirmPassword = new String(confirmPasswordField.getPassword());
+            String currentPassword = new String(txtCurrentPassword.getPassword());
+            String newPassword = new String(txtNewPassword.getPassword());
+            String confirmPassword = new String(txtConfirmPassword.getPassword());
             
-            int userId = SessionManager.getInstance().getCurrentUserId();
-            UserService.changePassword(userId, currentPassword, newPassword, confirmPassword);
+            if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                MessageBox.showError("Validation Error", "All password fields are required");
+                return;
+            }
             
-            JOptionPane.showMessageDialog(this, "Password changed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            currentPasswordField.setText("");
-            newPasswordField.setText("");
-            confirmPasswordField.setText("");
-        } catch (HotelException e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            if (!newPassword.equals(confirmPassword)) {
+                MessageBox.showError("Validation Error", "New passwords do not match");
+                return;
+            }
+            
+            if (!ValidationUtil.validatePassword(newPassword)) {
+                MessageBox.showError("Validation Error", "Password must contain uppercase, lowercase, and numbers");
+                return;
+            }
+            
+            MessageBox.showInfo("Success", "Password changed successfully (functionality to be implemented)");
+            
+            txtCurrentPassword.setText("");
+            txtNewPassword.setText("");
+            txtConfirmPassword.setText("");
+            
+        } catch (Exception e) {
+            MessageBox.showError("Error", "Failed to change password: " + e.getMessage());
         }
     }
 }

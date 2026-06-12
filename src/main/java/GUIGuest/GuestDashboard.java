@@ -1,5 +1,6 @@
 package GUIGuest;
 
+import GUILogin.LoginFrame;
 import HotelReservationMainSystem.SessionManager;
 import Utilities.Constants;
 import javax.swing.*;
