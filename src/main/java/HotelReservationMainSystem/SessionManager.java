@@ -1,27 +1,25 @@
 package HotelReservationMainSystem;
 
 import Models.User;
-import Models.Guest;
 
 /**
- * SessionManager - Singleton Session Management
+ * SessionManager - Singleton session management for logged-in users
  * 
- * Manages the current user session throughout the application.
- * Stores logged-in user information and guest profile when applicable.
+ * Tracks current user information and manages user session state.
+ * Used throughout the application to access current user data.
  */
 public class SessionManager {
     
     private static SessionManager instance;
     private User currentUser;
-    private Guest currentGuest;
+    private String currentUsername;
+    private String currentAccessLevel;
+    private int currentUserId;
     
-    /**
-     * Private constructor for singleton pattern
-     */
     private SessionManager() {}
     
     /**
-     * Get singleton instance
+     * Get singleton instance of SessionManager
      */
     public static synchronized SessionManager getInstance() {
         if (instance == null) {
@@ -31,105 +29,85 @@ public class SessionManager {
     }
     
     /**
-     * Set the current user session
+     * Initialize session with logged-in user
      */
-    public void setCurrentUser(User user) {
+    public void initializeSession(User user) {
         this.currentUser = user;
+        this.currentUsername = user.getUsername();
+        this.currentAccessLevel = user.getAccessLevel();
+        this.currentUserId = user.getUserId();
     }
     
     /**
-     * Get the current user
+     * Get current logged-in user
      */
     public User getCurrentUser() {
         return currentUser;
     }
     
     /**
-     * Get current user ID
+     * Get current username
      */
-    public int getCurrentUserId() {
-        if (currentUser == null) {
-            return -1;
-        }
-        return currentUser.getUserId();
+    public String getCurrentUsername() {
+        return currentUsername;
     }
     
     /**
-     * Get current user's access level
+     * Get current access level
      */
-    public String getCurrentUserAccessLevel() {
-        if (currentUser == null) {
-            return null;
-        }
-        return currentUser.getAccessLevel();
+    public String getCurrentAccessLevel() {
+        return currentAccessLevel;
+    }
+    
+    /**
+     * Get current user ID
+     */
+    public int getCurrentUserId() {
+        return currentUserId;
     }
     
     /**
      * Check if user is admin
      */
     public boolean isAdmin() {
-        if (currentUser == null) {
-            return false;
-        }
-        return currentUser.isAdmin();
+        return "Admin".equalsIgnoreCase(currentAccessLevel);
     }
     
     /**
      * Check if user is receptionist
      */
     public boolean isReceptionist() {
-        if (currentUser == null) {
-            return false;
-        }
-        return currentUser.isReceptionist();
+        return "Receptionist".equalsIgnoreCase(currentAccessLevel);
     }
     
     /**
      * Check if user is guest
      */
     public boolean isGuest() {
-        if (currentUser == null) {
-            return false;
-        }
-        return currentUser.isGuest();
-    }
-    
-    /**
-     * Set current guest profile
-     */
-    public void setCurrentGuest(Guest guest) {
-        this.currentGuest = guest;
-    }
-    
-    /**
-     * Get current guest profile
-     */
-    public Guest getCurrentGuest() {
-        return currentGuest;
-    }
-    
-    /**
-     * Get current guest ID
-     */
-    public int getCurrentGuestId() {
-        if (currentGuest == null) {
-            return -1;
-        }
-        return currentGuest.getGuestId();
-    }
-    
-    /**
-     * Clear session (logout)
-     */
-    public void clearSession() {
-        this.currentUser = null;
-        this.currentGuest = null;
+        return "Guest".equalsIgnoreCase(currentAccessLevel);
     }
     
     /**
      * Check if user is logged in
      */
     public boolean isLoggedIn() {
-        return currentUser != null;
+        return currentUser != null && currentUserId > 0;
+    }
+    
+    /**
+     * Logout - clear session
+     */
+    public void logout() {
+        currentUser = null;
+        currentUsername = null;
+        currentAccessLevel = null;
+        currentUserId = 0;
+    }
+    
+    /**
+     * Clear all session data
+     */
+    public void clearSession() {
+        logout();
     }
 }
