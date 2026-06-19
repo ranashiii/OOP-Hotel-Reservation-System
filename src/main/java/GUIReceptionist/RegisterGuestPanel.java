@@ -1,242 +1,387 @@
 package GUIReceptionist;
 
-import DAO.GuestDAO;
-import DAO.UserDAO;
-import Models.Guest;
-import Models.User;
-import Services.GuestService;
-import Services.UserService;
-import Utilities.Constants;
-import Utilities.MessageBox;
-import Utilities.ValidationUtil;
-import Utilities.PasswordUtil;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.*;
-import java.awt.*;
-import java.time.LocalDate;
 
-/**
- * RegisterGuestPanel - Guest registration interface for receptionists
- * 
- * Allows receptionists to register new guests and create user accounts.
- * Validates all guest information before database insertion.
- */
-public class RegisterGuestPanel extends JPanel {
-    
-    private UserService userService;
-    private GuestService guestService;
-    private GuestDAO guestDAO;
-    private UserDAO userDAO;
-    
-    private JTextField txtUsername, txtEmail, txtFirstName, txtLastName, txtMiddleName;
-    private JTextField txtPhone, txtAddress, txtDateOfBirth, txtNationality, txtIdNumber;
-    private JPasswordField txtPassword, txtConfirmPassword;
-    private JComboBox<String> txtIdType;
-    private JButton btnRegister, btnReset;
-    
-    public RegisterGuestPanel() {
-        this.userService = new UserService();
-        this.guestService = new GuestService();
-        this.guestDAO = new GuestDAO();
-        this.userDAO = new UserDAO();
-        initUI();
+public class RegisterGuestPanel extends JFrame implements ActionListener{
+
+    private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSidePay, btnSideReserve, btnHomePage,
+            btnSubmit, btnClear;
+    private JLabel lblReception, lblHotel, lblManagement, lblDate;
+    private JPanel sidePan, topPan, formPanel;
+    private JTextField txtFirstName, txtMiddleName, txtLastName, txtDOB, txtNationality, txtAddress,
+            txtPhone, txtEmail, txtIDNumber;
+    private JComboBox<String> cmbIDType;
+
+
+    RegisterGuestPanel(){
+        sidePanel();
+        functionMenu();
+        topPanel();
+        formPanel();
+
+        setSize(1200,700);
+        setLayout(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setTitle("Hotel Reservation System - Receptionist Register Guest");
     }
-    
-    private void initUI() {
-        setLayout(new BorderLayout(10, 10));
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        
-        JPanel formPanel = createFormPanel();
-        JScrollPane scrollPane = new JScrollPane(formPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        add(scrollPane, BorderLayout.CENTER);
-        
-        JPanel buttonPanel = createButtonPanel();
-        add(buttonPanel, BorderLayout.SOUTH);
+    private void functionMenu(){
+
+        lblReception = new JLabel ("GUEST REGISTRATION");
+        lblReception.setBounds(350, 60, 800, 60);
+        lblReception.setFont(new Font ("Arial Black", Font.BOLD, 40));
+        add(lblReception);
+
     }
-    
-    private JPanel createFormPanel() {
-        JPanel panel = new JPanel(new GridLayout(13, 2, 10, 10));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        panel.add(new JLabel("Username:"));
-        txtUsername = new JTextField();
-        panel.add(txtUsername);
-        
-        panel.add(new JLabel("Password:"));
-        txtPassword = new JPasswordField();
-        panel.add(txtPassword);
-        
-        panel.add(new JLabel("Confirm Password:"));
-        txtConfirmPassword = new JPasswordField();
-        panel.add(txtConfirmPassword);
-        
-        panel.add(new JLabel("Email:"));
-        txtEmail = new JTextField();
-        panel.add(txtEmail);
-        
-        panel.add(new JLabel("First Name:"));
+
+    private void sidePanel() {
+        sidePan = new JPanel ();
+        sidePan.setBounds (0, 0, 300, 800);
+        sidePan.setLayout(null);
+        sidePan.setBackground(Color.decode("#222222"));
+        add(sidePan);
+
+        lblHotel = new JLabel ("HOTEL");
+        lblHotel.setBounds(10, 10, 800, 50);
+        lblHotel.setFont(new Font ("Arial Black", Font.BOLD, 40));
+        lblHotel.setForeground(Color.WHITE);
+        sidePan.add(lblHotel);
+
+        lblManagement = new JLabel ("MANAGEMENT");
+        lblManagement.setBounds(10, 50, 800, 50);
+        lblManagement.setFont(new Font ("Arial Black", Font.BOLD, 30));
+        lblManagement.setForeground(Color.WHITE);
+        sidePan.add(lblManagement);
+
+        btnHomePage = new JButton ("Home Page");
+        btnHomePage.setBounds(0, 160, 300, 50);
+        btnHomePage.setBackground(Color.decode("#222222"));
+        btnHomePage.setForeground(Color.WHITE);
+        btnHomePage.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnHomePage.setBorderPainted(false);
+        btnHomePage.setFocusPainted(false);
+        btnHomePage.setBorder(null);
+        btnHomePage.addActionListener(this);
+        sidePan.add(btnHomePage);
+
+        btnSideDash = new JButton ("Dashboard");
+        btnSideDash.setBounds(0, 230, 300, 50);
+        btnSideDash.setBackground(Color.decode("#222222"));
+        btnSideDash.setForeground(Color.WHITE);
+        btnSideDash.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideDash.setBorderPainted(false);
+        btnSideDash.setFocusPainted(false);
+        btnSideDash.setBorder(null);
+        btnSideDash.addActionListener(this);
+        sidePan.add(btnSideDash);
+
+        btnSideRegister = new JButton ("Guest Register");
+        btnSideRegister.setBounds(0, 300, 300, 50);
+        btnSideRegister.setBackground(Color.decode("#FFFFFF"));
+        btnSideRegister.setForeground(Color.BLACK);
+        btnSideRegister.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideRegister.setBorderPainted(false);
+        btnSideRegister.setFocusPainted(false);
+        btnSideRegister.setBorder(null);
+        btnSideRegister.addActionListener(this);
+        sidePan.add(btnSideRegister);
+
+        btnSideRoomBooking = new JButton ("Room Booking");
+        btnSideRoomBooking.setBounds(0, 370, 300, 50);
+        btnSideRoomBooking.setBackground(Color.decode("#222222"));
+        btnSideRoomBooking.setForeground(Color.WHITE);
+        btnSideRoomBooking.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideRoomBooking.setBorderPainted(false);
+        btnSideRoomBooking.setFocusPainted(false);
+        btnSideRoomBooking.setBorder(null);
+        btnSideRoomBooking.addActionListener(this);
+        sidePan.add(btnSideRoomBooking);
+
+        btnSidePay = new JButton ("Payment");
+        btnSidePay.setBounds(0, 440, 300, 50);
+        btnSidePay.setBackground(Color.decode("#222222"));
+        btnSidePay.setForeground(Color.WHITE);
+        btnSidePay.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSidePay.setBorderPainted(false);
+        btnSidePay.setFocusPainted(false);
+        btnSidePay.setBorder(null);
+        btnSidePay.addActionListener(this);
+        sidePan.add(btnSidePay);
+
+        btnSideReserve = new JButton ("Reservation");
+        btnSideReserve.setBounds(0, 510, 300, 50);;
+        btnSideReserve.setBackground(Color.decode("#222222"));
+        btnSideReserve.setForeground(Color.WHITE);
+        btnSideReserve.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideReserve.setBorderPainted(false);
+        btnSideReserve.setFocusPainted(false);
+        btnSideReserve.setBorder(null);
+        btnSideReserve.addActionListener(this);
+        sidePan.add(btnSideReserve);
+
+    }
+    private void topPanel() {
+        topPan = new JPanel ();
+        topPan.setBounds (300, 0, 900, 60);
+        topPan.setLayout(null);
+        topPan.setBackground(Color.decode("#FFFFFF"));
+        add(topPan);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy");
+        lblDate = new JLabel(dateFormat.format(new Date()));
+        lblDate.setBounds(20, 15, 300, 30);
+        lblDate.setFont(new Font("Arial Black", Font.BOLD, 16));
+        lblDate.setForeground(Color.decode("#5A3FB8"));
+        topPan.add(lblDate);
+    }
+    private void formPanel() {
+
+        formPanel = new JPanel();
+        formPanel.setBounds(320, 130, 850, 520);
+        formPanel.setLayout(null);
+        formPanel.setBackground(Color.WHITE);
+        add(formPanel);
+
+
+        JLabel lbl1 = new JLabel("First Name:");
+        lbl1.setBounds(30, 15, 220, 25);
+        lbl1.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl1);
+
         txtFirstName = new JTextField();
-        panel.add(txtFirstName);
-        
-        panel.add(new JLabel("Middle Name:"));
+        txtFirstName.setBounds(280, 10, 530, 35);
+        txtFirstName.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtFirstName);
+
+
+        JLabel lbl2 = new JLabel("Middle Name:");
+        lbl2.setBounds(30, 57, 220, 25);
+        lbl2.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl2);
+
         txtMiddleName = new JTextField();
-        panel.add(txtMiddleName);
-        
-        panel.add(new JLabel("Last Name:"));
+        txtMiddleName.setBounds(280, 52, 530, 35);
+        txtMiddleName.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtMiddleName);
+
+
+        JLabel lbl3 = new JLabel("Last Name:");
+        lbl3.setBounds(30, 99, 220, 25);
+        lbl3.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl3);
+
         txtLastName = new JTextField();
-        panel.add(txtLastName);
-        
-        panel.add(new JLabel("Phone Number:"));
-        txtPhone = new JTextField();
-        panel.add(txtPhone);
-        
-        panel.add(new JLabel("Address:"));
-        txtAddress = new JTextField();
-        panel.add(txtAddress);
-        
-        panel.add(new JLabel("Date of Birth (YYYY-MM-DD):"));
-        txtDateOfBirth = new JTextField();
-        panel.add(txtDateOfBirth);
-        
-        panel.add(new JLabel("Nationality:"));
+        txtLastName.setBounds(280, 94, 530, 35);
+        txtLastName.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtLastName);
+
+
+        JLabel lbl4 = new JLabel("Date of Birth (YYYY-MM-DD):");
+        lbl4.setBounds(30, 141, 270, 25);
+        lbl4.setFont(new Font("Arial Black", Font.BOLD, 15));
+        formPanel.add(lbl4);
+
+        txtDOB = new JTextField();
+        txtDOB.setBounds(280, 136, 530, 35);
+        txtDOB.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtDOB);
+
+
+        JLabel lbl5 = new JLabel("Nationality:");
+        lbl5.setBounds(30, 183, 220, 25);
+        lbl5.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl5);
+
         txtNationality = new JTextField();
-        panel.add(txtNationality);
-        
-        panel.add(new JLabel("ID Document Type:"));
-        txtIdType = new JComboBox<>(new String[]{"Passport", "Driver's License", "National ID", "Postal ID"});
-        panel.add(txtIdType);
-        
-        panel.add(new JLabel("ID Document Number:"));
-        txtIdNumber = new JTextField();
-        panel.add(txtIdNumber);
-        
-        return panel;
+        txtNationality.setBounds(280, 178, 530, 35);
+        txtNationality.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtNationality);
+
+
+        JLabel lbl6 = new JLabel("Address:");
+        lbl6.setBounds(30, 225, 220, 25);
+        lbl6.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl6);
+
+        txtAddress = new JTextField();
+        txtAddress.setBounds(280, 220, 530, 35);
+        txtAddress.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtAddress);
+
+
+        JLabel lbl7 = new JLabel("Phone Number:");
+        lbl7.setBounds(30, 267, 220, 25);
+        lbl7.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl7);
+
+        txtPhone = new JTextField();
+        txtPhone.setBounds(280, 262, 530, 35);
+        txtPhone.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtPhone);
+
+
+        JLabel lbl8 = new JLabel("Email:");
+        lbl8.setBounds(30, 309, 220, 25);
+        lbl8.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl8);
+
+        txtEmail = new JTextField();
+        txtEmail.setBounds(280, 304, 530, 35);
+        txtEmail.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtEmail);
+
+
+        JLabel lbl9 = new JLabel("ID Document Type:");
+        lbl9.setBounds(30, 351, 220, 25);
+        lbl9.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl9);
+
+        cmbIDType = new JComboBox<>(new String[]{"Select ID", "Passport", "Driver's License", "National ID", "Postal ID"});
+        cmbIDType.setBounds(280, 346, 530, 35);
+        cmbIDType.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(cmbIDType);
+
+
+        JLabel lbl10 = new JLabel("ID Document Number:");
+        lbl10.setBounds(30, 393, 220, 25);
+        lbl10.setFont(new Font("Arial Black", Font.BOLD, 16));
+        formPanel.add(lbl10);
+
+        txtIDNumber = new JTextField();
+        txtIDNumber.setBounds(280, 388, 530, 35);
+        txtIDNumber.setFont(new Font("Arial", Font.PLAIN, 16));
+        formPanel.add(txtIDNumber);
+
+
+        btnSubmit = new JButton("Create Guest Account");
+        btnSubmit.setBounds(220, 450, 250, 40);
+        btnSubmit.setBackground(Color.decode("#222222"));
+        btnSubmit.setForeground(Color.WHITE);
+        btnSubmit.setFont(new Font("Arial Black", Font.BOLD, 13));
+        btnSubmit.setBorderPainted(false);
+        btnSubmit.setFocusPainted(false);
+        btnSubmit.addActionListener(this);
+        formPanel.add(btnSubmit);
+
+        btnClear = new JButton("CLEAR");
+        btnClear.setBounds(550, 450, 120, 40);
+        btnClear.setBackground(Color.decode("#D32F2F"));
+        btnClear.setForeground(Color.WHITE);
+        btnClear.setFont(new Font("Arial Black", Font.BOLD, 13));
+        btnClear.setBorderPainted(false);
+        btnClear.setFocusPainted(false);
+        btnClear.addActionListener(this);
+        formPanel.add(btnClear);
     }
-    
-    private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panel.setBackground(Color.WHITE);
-        
-        btnRegister = new JButton("Register Guest");
-        btnRegister.setBackground(new Color(76, 175, 80));
-        btnRegister.setForeground(Color.WHITE);
-        btnRegister.addActionListener(e -> registerGuest());
-        panel.add(btnRegister);
-        
-        btnReset = new JButton("Clear Form");
-        btnReset.setBackground(new Color(158, 158, 158));
-        btnReset.setForeground(Color.WHITE);
-        btnReset.addActionListener(e -> clearForm());
-        panel.add(btnReset);
-        
-        return panel;
-    }
-    
-    private void registerGuest() {
-        try {
-            String username = txtUsername.getText().trim();
-            String password = new String(txtPassword.getPassword());
-            String confirmPassword = new String(txtConfirmPassword.getPassword());
-            String email = txtEmail.getText().trim();
-            String firstName = txtFirstName.getText().trim();
-            String lastName = txtLastName.getText().trim();
-            String middleName = txtMiddleName.getText().trim();
-            String phone = txtPhone.getText().trim();
-            String address = txtAddress.getText().trim();
-            String dateOfBirthStr = txtDateOfBirth.getText().trim();
-            String nationality = txtNationality.getText().trim();
-            String idType = (String) txtIdType.getSelectedItem();
-            String idNumber = txtIdNumber.getText().trim();
-            
-            if (username.isEmpty() || password.isEmpty() || email.isEmpty() || 
-                firstName.isEmpty() || lastName.isEmpty() || phone.isEmpty() || 
-                address.isEmpty() || dateOfBirthStr.isEmpty() || idNumber.isEmpty()) {
-                MessageBox.showError("Validation Error", "All required fields must be filled");
-                return;
-            }
-            
-            if (!ValidationUtil.validateUsername(username)) {
-                MessageBox.showError("Validation Error", "Username must be 5-20 alphanumeric characters");
-                return;
-            }
-            
-            if (!ValidationUtil.validatePassword(password)) {
-                MessageBox.showError("Validation Error", "Password must contain uppercase, lowercase, and numbers");
-                return;
-            }
-            
-            if (!password.equals(confirmPassword)) {
-                MessageBox.showError("Validation Error", "Passwords do not match");
-                return;
-            }
-            
-            if (!ValidationUtil.validateEmail(email)) {
-                MessageBox.showError("Validation Error", "Invalid email format");
-                return;
-            }
-            
-            if (!ValidationUtil.validateName(firstName)) {
-                MessageBox.showError("Validation Error", "First name is invalid");
-                return;
-            }
-            
-            if (!ValidationUtil.validateName(lastName)) {
-                MessageBox.showError("Validation Error", "Last name is invalid");
-                return;
-            }
-            
-            if (!ValidationUtil.validatePhoneNumber(phone)) {
-                MessageBox.showError("Validation Error", "Phone number must be in Philippine format");
-                return;
-            }
-            
-            LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr);
-            if (!ValidationUtil.validateDateOfBirth(dateOfBirth)) {
-                MessageBox.showError("Validation Error", "Guest must be at least 18 years old");
-                return;
-            }
-            
-            User newUser = userService.registerUser(username, password, confirmPassword, email, Constants.ACCESS_GUEST);
-            
-            Guest newGuest = new Guest();
-            newGuest.setUserId(newUser.getUserId());
-            newGuest.setFirstName(firstName);
-            newGuest.setMiddleName(middleName);
-            newGuest.setLastName(lastName);
-            newGuest.setEmail(email);
-            newGuest.setPhoneNumber(phone);
-            newGuest.setAddress(address);
-            // FIX: Guest.setDateOfBirth() expects java.util.Date; convert from LocalDate
-            newGuest.setDateOfBirth(java.sql.Date.valueOf(dateOfBirth));
-            newGuest.setNationality(nationality);
-            newGuest.setIdDocumentType(idType);
-            newGuest.setIdDocumentNumber(idNumber);
-            
-            guestService.registerGuest(newGuest);
-            
-            MessageBox.showInfo("Success", "Guest registered successfully!\nUsername: " + username);
-            clearForm();
-            
-        } catch (Exception e) {
-            MessageBox.showError("Registration Error", "Failed to register guest: " + e.getMessage());
-        }
-    }
-    
-    private void clearForm() {
-        txtUsername.setText("");
-        txtPassword.setText("");
-        txtConfirmPassword.setText("");
-        txtEmail.setText("");
+
+    private void clearForm(){
         txtFirstName.setText("");
         txtMiddleName.setText("");
         txtLastName.setText("");
-        txtPhone.setText("");
-        txtAddress.setText("");
-        txtDateOfBirth.setText("");
+        txtDOB.setText("");
         txtNationality.setText("");
-        txtIdType.setSelectedIndex(0);
-        txtIdNumber.setText("");
+        txtAddress.setText("");
+        txtPhone.setText("");
+        txtEmail.setText("");
+        txtIDNumber.setText("");
+        cmbIDType.setSelectedIndex(0);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+        if (e.getSource() == btnSubmit) {
+
+            String first = txtFirstName.getText();
+            String last = txtLastName.getText();
+            String dob = txtDOB.getText();
+            String nationality = txtNationality.getText();
+            String address = txtAddress.getText();
+            String phone = txtPhone.getText();
+            String email = txtEmail.getText();
+            String idNum = txtIDNumber.getText();
+            String idType = cmbIDType.getSelectedItem().toString();
+
+            if (first.isEmpty() || last.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Enter the guest's full name.");
+                return;
+            }
+
+            if (dob.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Enter the guest's date of birth.");
+                return;
+            }
+
+            if (nationality.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Enter the guest's nationality.");
+                return;
+            }
+
+            if (address.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Enter the guest's address.");
+                return;
+            }
+
+            if (!(phone.startsWith("09") || phone.startsWith("+63"))) {
+                JOptionPane.showMessageDialog(this, "Phone should start with 09 or +63.");
+                return;
+            }
+
+            if (!email.contains("@")) {
+                JOptionPane.showMessageDialog(this, "Check the email address.");
+                return;
+            }
+
+            if (idType.equals("Select ID")) {
+                JOptionPane.showMessageDialog(this, "Select an ID document type.");
+                return;
+            }
+
+            if (idNum.length() < 5) {
+                JOptionPane.showMessageDialog(this, "Enter a valid ID document number.");
+                return;
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Guest account created for " + first + " " + last,
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            clearForm();
+        }
+
+        else if (e.getSource() == btnClear) {
+            clearForm();
+        }
+
+        else if (e.getSource() == btnHomePage) {
+            dispose();
+            new HomePage().setVisible(true);
+        } else if (e.getSource() == btnSideDash) {
+            dispose();
+            new ReceptionistDashboard().setVisible(true);
+        } else if (e.getSource() == btnSideRoomBooking) {
+            dispose();
+            new RoomBookingPanel().setVisible(true);
+        } else if (e.getSource() == btnSidePay) {
+            dispose();
+            new RecordPaymentPanel().setVisible(true);
+        } else if (e.getSource() == btnSideReserve) {
+            dispose();
+            new ViewReservationPanel().setVisible(true);
+        }
     }
 }

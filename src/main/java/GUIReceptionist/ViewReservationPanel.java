@@ -7,34 +7,26 @@ import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.*;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import javax.swing.table.DefaultTableModel;
 
-public class ReceptionistDashboard extends JFrame implements ActionListener{
+public class ViewReservationPanel extends JFrame implements ActionListener{
 
-    private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSideCheckIn, btnSideCheckOut,
-            btnSidePay, btnSideReserve, btnHomePage, btnRefresh;
-    private JLabel lblReception, lblHotel, lblManagement, lblDate, lblReceptionistName, lblReceptionistRole,
-            lblRecent, lblCheckInCount, lblCheckOutCount, lblAvailableRooms, lblOccupancyRate, lblTotalReservations;
-    private JPanel sidePan, topPan, dashboardPanel, card1, card2, card3, card4, recentPanel;
+    private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSidePay, btnSideReserve, btnHomePage, btnRefresh;
+    private JLabel lblReception, lblHotel, lblManagement, lblDate, lblRecent, lblTotalReservations;
+    private JPanel sidePan, topPan, dashboardPanel, recentPanel;
     private JTable tblReservations;
     private DefaultTableModel reservationTableModel;
     
-    private int todaysCheckIns, todaysCheckOuts;
-    private int availableRooms;
-    private double occupancyRate;
     private Object[][] reservationData;
 
-    ReceptionistDashboard(){
-        this.todaysCheckIns = 0;
-        this.todaysCheckOuts = 0;
-        this.availableRooms = 0;
-        this.occupancyRate = 0.0;
+    ViewReservationPanel(){
         this.reservationData = new Object[0][];
 
         sidePanel();
         functionMenu();
         topPanel();
-        dashboardPan();
+        reservationPan();
         refreshDisplay();
 
         setSize(1200,700);
@@ -42,12 +34,12 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
-        setTitle("Hotel Reservation System - Receptionist Dashboard");
+        setTitle("Hotel Reservation System - Receptionist View Reservation");
     }
 
     private void functionMenu(){
 
-        lblReception = new JLabel ("DASHBOARD");
+        lblReception = new JLabel ("RESERVATION");
         lblReception.setBounds(330, 60, 800, 60);
         lblReception.setFont(new Font ("Arial Black", Font.BOLD, 50));
         add(lblReception);
@@ -87,8 +79,8 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         
         btnSideDash = new JButton ("Dashboard");
         btnSideDash.setBounds(0, 230, 300, 50);
-        btnSideDash.setBackground(Color.decode("#FFFFFF"));
-        btnSideDash.setForeground(Color.BLACK);
+        btnSideDash.setBackground(Color.decode("#222222"));
+        btnSideDash.setForeground(Color.WHITE);
         btnSideDash.setFont(new Font ("Arial Black", Font.BOLD, 18));
         
         btnSideDash.setBorderPainted(false);
@@ -134,9 +126,9 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         sidePan.add(btnSidePay);
         
         btnSideReserve = new JButton ("Reservation");
-        btnSideReserve.setBounds(0, 510, 300, 50);;
-        btnSideReserve.setBackground(Color.decode("#222222"));
-        btnSideReserve.setForeground(Color.WHITE);
+        btnSideReserve.setBounds(0, 510, 300, 50);
+        btnSideReserve.setBackground(Color.decode("#FFFFFF"));
+        btnSideReserve.setForeground(Color.BLACK);
         btnSideReserve.setFont(new Font ("Arial Black", Font.BOLD, 18));
         
         btnSideReserve.setBorderPainted(false);
@@ -161,7 +153,7 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         topPan.add(lblDate);
     }
 
-    private void dashboardPan(){
+    private void reservationPan(){
 
         dashboardPanel = new JPanel();
         dashboardPanel.setBounds(300, 130, 900, 520);
@@ -169,88 +161,16 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         dashboardPanel.setBackground(Color.decode("#F5F5F5"));
         add(dashboardPanel);
 
-        card1 = new JPanel();
-        card1.setBounds(20, 20, 205, 90);
-        card1.setBackground(Color.decode("#2ECC71"));
-        card1.setLayout(null);
-        dashboardPanel.add(card1);
-
-        JLabel lblCheckInTitle = new JLabel("Today's Check-ins");
-        lblCheckInTitle.setBounds(10, 10, 185, 20);
-        lblCheckInTitle.setFont(new Font("Arial", Font.BOLD, 12));
-        lblCheckInTitle.setForeground(Color.WHITE);
-        card1.add(lblCheckInTitle);
-
-        lblCheckInCount = new JLabel(String.valueOf(todaysCheckIns));
-        lblCheckInCount.setBounds(10, 30, 185, 40);
-        lblCheckInCount.setFont(new Font("Arial Black", Font.BOLD, 28));
-        lblCheckInCount.setForeground(Color.WHITE);
-        card1.add(lblCheckInCount);
-
-        card2 = new JPanel();
-        card2.setBounds(240, 20, 205, 90);
-        card2.setBackground(Color.decode("#E67E22"));
-        card2.setLayout(null);
-        dashboardPanel.add(card2);
-
-        JLabel lblCheckOutTitle = new JLabel("Today's Check-outs");
-        lblCheckOutTitle.setBounds(10, 10, 185, 20);
-        lblCheckOutTitle.setFont(new Font("Arial", Font.BOLD, 12));
-        lblCheckOutTitle.setForeground(Color.WHITE);
-        card2.add(lblCheckOutTitle);
-
-        lblCheckOutCount = new JLabel(String.valueOf(todaysCheckOuts));
-        lblCheckOutCount.setBounds(10, 30, 185, 40);
-        lblCheckOutCount.setFont(new Font("Arial Black", Font.BOLD, 28));
-        lblCheckOutCount.setForeground(Color.WHITE);
-        card2.add(lblCheckOutCount);
-
-        card3 = new JPanel();
-        card3.setBounds(460, 20, 205, 90);
-        card3.setBackground(Color.decode("#3498DB"));
-        card3.setLayout(null);
-        dashboardPanel.add(card3);
-
-        JLabel lblAvailTitle = new JLabel("Available Rooms");
-        lblAvailTitle.setBounds(10, 10, 185, 20);
-        lblAvailTitle.setFont(new Font("Arial", Font.BOLD, 12));
-        lblAvailTitle.setForeground(Color.WHITE);
-        card3.add(lblAvailTitle);
-
-        lblAvailableRooms = new JLabel(String.valueOf(availableRooms));
-        lblAvailableRooms.setBounds(10, 30, 185, 40);
-        lblAvailableRooms.setFont(new Font("Arial Black", Font.BOLD, 28));
-        lblAvailableRooms.setForeground(Color.WHITE);
-        card3.add(lblAvailableRooms);
-
-        card4 = new JPanel();
-        card4.setBounds(680, 20, 200, 90);
-        card4.setBackground(Color.decode("#8E44AD"));
-        card4.setLayout(null);
-        dashboardPanel.add(card4);
-
-        JLabel lblOccupancyTitle = new JLabel("Occupancy Rate");
-        lblOccupancyTitle.setBounds(10, 10, 180, 20);
-        lblOccupancyTitle.setFont(new Font("Arial", Font.BOLD, 12));
-        lblOccupancyTitle.setForeground(Color.WHITE);
-        card4.add(lblOccupancyTitle);
-
-        lblOccupancyRate = new JLabel(String.format("%.1f%%", occupancyRate));
-        lblOccupancyRate.setBounds(10, 30, 180, 40);
-        lblOccupancyRate.setFont(new Font("Arial Black", Font.BOLD, 28));
-        lblOccupancyRate.setForeground(Color.WHITE);
-        card4.add(lblOccupancyRate);
-
         recentPanel = new JPanel();
-        recentPanel.setBounds(20, 130, 860, 330);
+        recentPanel.setBounds(20, 20, 860, 470);
         recentPanel.setBackground(Color.WHITE);
         recentPanel.setLayout(null);
         recentPanel.setBorder(BorderFactory.createLineBorder(Color.decode("#DDDDDD")));
         dashboardPanel.add(recentPanel);
 
-        lblRecent = new JLabel("Today's Reservations");
-        lblRecent.setBounds(10, 5, 400, 30);
-        lblRecent.setFont(new Font("Arial Black", Font.BOLD, 18));
+        lblRecent = new JLabel("All Reservations");
+        lblRecent.setBounds(15, 10, 400, 30);
+        lblRecent.setFont(new Font("Arial Black", Font.BOLD, 20));
         lblRecent.setForeground(Color.decode("#333333"));
         recentPanel.add(lblRecent);
 
@@ -270,34 +190,27 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         tblReservations.getTableHeader().setForeground(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(tblReservations);
-        scrollPane.setBounds(10, 40, 840, 240);
+        scrollPane.setBounds(10, 50, 840, 350);
         recentPanel.add(scrollPane);
 
         JLabel lblTotalLabel = new JLabel("Total Reservations:");
-        lblTotalLabel.setBounds(10, 290, 150, 25);
+        lblTotalLabel.setBounds(10, 420, 150, 25);
         lblTotalLabel.setFont(new Font("Arial", Font.BOLD, 13));
         recentPanel.add(lblTotalLabel);
 
         lblTotalReservations = new JLabel(String.valueOf(reservationData.length));
-        lblTotalReservations.setBounds(160, 290, 100, 25);
+        lblTotalReservations.setBounds(160, 420, 100, 25);
         lblTotalReservations.setFont(new Font("Arial Black", Font.BOLD, 13));
         lblTotalReservations.setForeground(Color.decode("#5A3FB8"));
         recentPanel.add(lblTotalReservations);
 
         btnRefresh = new JButton("Refresh Data");
-        btnRefresh.setBounds(740, 287, 110, 30);
+        btnRefresh.setBounds(720, 415, 130, 35);
         btnRefresh.setFont(new Font("Arial", Font.BOLD, 12));
         btnRefresh.setBackground(Color.decode("#222222"));
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.addActionListener(this);
         recentPanel.add(btnRefresh);
-    }
-    public void setStatistics(int checkIns, int checkOuts, int availableRooms, double occupancyRate){
-        this.todaysCheckIns = checkIns;
-        this.todaysCheckOuts = checkOuts;
-        this.availableRooms = availableRooms;
-        this.occupancyRate = occupancyRate;
-        refreshDisplay();
     }
 
     public void setReservationData(Object[][] data){
@@ -306,11 +219,6 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
     }
 
     private void refreshDisplay(){
-        lblCheckInCount.setText(String.valueOf(todaysCheckIns));
-        lblCheckOutCount.setText(String.valueOf(todaysCheckOuts));
-        lblAvailableRooms.setText(String.valueOf(availableRooms));
-        lblOccupancyRate.setText(String.format("%.1f%%", occupancyRate));
-
         reservationTableModel.setRowCount(0);
         for (Object[] row : reservationData) {
             reservationTableModel.addRow(row);
@@ -333,9 +241,9 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         }else if(e.getSource() == btnSidePay){
             dispose();
             new RecordPaymentPanel().setVisible(true);
-        }else if(e.getSource() == btnSideReserve){
+        }else if (e.getSource() == btnSideDash) {
             dispose();
-            new ViewReservationPanel().setVisible(true);
+            new ReceptionistDashboard().setVisible(true);
         }else if(e.getSource() == btnRefresh){
             refreshDisplay();
         }

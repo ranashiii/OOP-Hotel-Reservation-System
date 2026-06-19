@@ -6,6 +6,7 @@ import Models.User;
 import Services.UserService;
 import Utilities.HotelException;
 import Utilities.ValidationUtil;
+import GUIReceptionist.HomePage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -250,9 +251,9 @@ public class LoginFrame extends JFrame implements ActionListener {
      */
     private void openDashboard(String accessLevel) {
         if ("Admin".equalsIgnoreCase(accessLevel)) {
-            new GUIAdmin.AdminDashboard().setVisible(true);
+            new GUIAdmin.HomePage().setVisible(true);
         } else if ("Receptionist".equalsIgnoreCase(accessLevel)) {
-            new GUIReceptionist.ReceptionistDashboard().setVisible(true);
+            new GUIReceptionist.HomePage().setVisible(true);
         } else if ("Guest".equalsIgnoreCase(accessLevel)) {
             new GUIGuest.GuestDashboard().setVisible(true);
         }

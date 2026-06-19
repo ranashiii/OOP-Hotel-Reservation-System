@@ -1,110 +1,147 @@
 package GUIAdmin;
 
-import HotelReservationMainSystem.SessionManager;
-import Utilities.Constants;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 
-/**
- * AdminDashboard - Main Admin Dashboard
- * 
- * Provides complete admin interface for system management including users,
- * rooms, reservations, and reporting.
- * 
- * @author Hotel Reservation System Team
- * @version 1.0.0
- */
 public class AdminDashboard extends JFrame {
-    
-    private JTabbedPane tabbedPane;
-    
+
+    private JPanel sidePan, topPan, contentPanel;
+    JButton btnUserManagement, btnRoomManagement, btnReports, btnReservations, btnLogout;
+    private JButton activeBtn = null;
+    private JLabel lblPageTitle;
+
+    final RoomService roomService = new RoomService();
+    final UserService userService = new UserService();
+    final ReservationService reservationService = new ReservationService();
+    final PaymentService paymentService = new PaymentService();
+
+    private static final Color SIDEBAR_BG = Color.decode("#222222");
+    private static final Color ACTIVE_BG = Color.WHITE;
+    private static final Color ACTIVE_FG = Color.BLACK;
+    private static final Color INACTIVE_BG = Color.decode("#222222");
+    private static final Color INACTIVE_FG = Color.WHITE;
+
     public AdminDashboard() {
-        setTitle("Hotel Reservation System - Admin Dashboard");
+        setTitle("Hotel Reservation System - ADMIN ACCESS");
+        setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(null);
         setResizable(false);
-        
-        initializeComponents();
-    }
-    
-    private void initializeComponents() {
-        // Top panel
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(211, 47, 47));
-        topPanel.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, 60));
-        
-        JLabel welcomeLabel = new JLabel("Administrator - " + SessionManager.getInstance().getCurrentUsername());
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        welcomeLabel.setForeground(Color.WHITE);
-        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 0));
-        topPanel.add(welcomeLabel, BorderLayout.WEST);
-        
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setPreferredSize(new Dimension(100, 40));
-        logoutButton.addActionListener(this::handleLogout);
-        topPanel.add(logoutButton, BorderLayout.EAST);
-        
-        add(topPanel, BorderLayout.NORTH);
-        
-        // Tabbed pane
-        // NOTE: AdminMainPanel (Dashboard) is fully implemented.
-        // ManageRooms, ManageUsers, Reservations, and Reports panels are pending
-        // implementation (Member 5 scope). They are wired here as stub panels
-        // so the dashboard compiles and the tabs are visible.
-        tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Dashboard",    new AdminMainPanel());
-        tabbedPane.addTab("Manage Rooms", createStubPanel("Manage Rooms", "Room management interface - Coming soon"));
-        tabbedPane.addTab("Manage Users", createStubPanel("Manage Users", "User account management - Coming soon"));
-        tabbedPane.addTab("Reservations", createStubPanel("Reservations", "All reservations view - Coming soon"));
-        tabbedPane.addTab("Reports",      createStubPanel("Reports",      "Revenue & occupancy reports - Coming soon"));
-        
-        add(tabbedPane, BorderLayout.CENTER);
-    }
-    
-    private void handleLogout(ActionEvent e) {
-        SessionManager.getInstance().logout();
+        setLocationRelativeTo(null);
+
+        sidePan = new JPanel();
+        sidePan.setBounds(0, 0, 300, 700);
+        sidePan.setLayout(null);
+        sidePan.setBackground(SIDEBAR_BG);
+        add(sidePan);
+
+        JLabel lblHotel = new JLabel("HOTEL");
+        lblHotel.setBounds(10, 10, 280, 50);
+        lblHotel.setFont(new Font("Arial Black", Font.BOLD, 40));
+        lblHotel.setForeground(Color.WHITE);
+        sidePan.add(lblHotel);
+
+        JLabel lblMgmt = new JLabel("MANAGEMENT");
+        lblMgmt.setBounds(10, 55, 280, 40);
+        lblMgmt.setFont(new Font("Arial Black", Font.BOLD, 26));
+        lblMgmt.setForeground(Color.WHITE);
+        sidePan.add(lblMgmt);
+
+        JButton btnHomePage = createSidebarButton("Home Page");
+        btnHomePage.setBounds(0, 160, 300, 50);
+        btnHomePage.addActionListener(e -> {
         dispose();
-        new GUILogin.LoginFrame().setVisible(true);
+        new HomePage().setVisible(true);
+        });
+        sidePan.add(btnHomePage);
+
+        btnUserManagement = createSidebarButton("User Management");
+        btnUserManagement.setBounds(0, 230, 300, 50);
+        sidePan.add(btnUserManagement);
+
+        btnRoomManagement = createSidebarButton("Room Management");
+        btnRoomManagement.setBounds(0, 300, 300, 50);
+        sidePan.add(btnRoomManagement);
+
+        btnReports = createSidebarButton("Reports");
+        btnReports.setBounds(0, 370, 300, 50);
+        sidePan.add(btnReports);
+
+        btnReservations = createSidebarButton("Reservations");
+        btnReservations.setBounds(0, 440, 300, 50);
+        sidePan.add(btnReservations);
+
+        btnLogout = createSidebarButton("Logout");
+        btnLogout.setBounds(0, 600, 300, 50);
+        sidePan.add(btnLogout);
+
+        topPan = new JPanel();
+        topPan.setBounds(0, 0, 1200, 150);
+        topPan.setLayout(null);
+        topPan.setBackground(Color.WHITE);
+        add(topPan);
+
+        lblPageTitle = new JLabel("ADMIN DASHBOARD");
+        lblPageTitle.setBounds(350, 50, 800, 80);
+        lblPageTitle.setFont(new Font("Arial Black", Font.BOLD, 55));
+        lblPageTitle.setForeground(Color.BLACK);
+        topPan.add(lblPageTitle);
+
+        contentPanel = new JPanel();
+        contentPanel.setBounds(310, 160, 870, 510);
+        contentPanel.setLayout(null);
+        contentPanel.setBackground(Color.decode("#F5F5F5"));
+        add(contentPanel);
+
+        btnUserManagement.addActionListener(e ->
+            switchTo(btnUserManagement, "USER MANAGEMENT", new UserManagementPanel(this, userService)));
+
+        btnRoomManagement.addActionListener(e ->
+            switchTo(btnRoomManagement, "ROOM MANAGEMENT", new RoomManagementPanel(this, roomService)));
+
+        btnReports.addActionListener(e ->
+            switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel(this, roomService, userService, reservationService, paymentService)));
+
+        btnReservations.addActionListener(e ->
+            switchTo(btnReservations, "RESERVATIONS", new ReservationsPanel(this, reservationService)));
+
+        btnLogout.addActionListener(e -> {
+            int c = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) System.exit(0);
+        });
+
+        switchTo(btnReports, "REPORTS & STATISTICS",
+        new ReportsPanel(this, roomService, userService, reservationService, paymentService));
+        }
+
+    void switchTo(JButton clicked, String title, JPanel panel) {
+        if (activeBtn != null) {
+            activeBtn.setBackground(INACTIVE_BG);
+            activeBtn.setForeground(INACTIVE_FG);
+        }
+        clicked.setBackground(ACTIVE_BG);
+        clicked.setForeground(ACTIVE_FG);
+        activeBtn = clicked;
+
+        lblPageTitle.setText(title);
+
+        contentPanel.removeAll();
+        panel.setBounds(0, 0, 870, 510);
+        contentPanel.add(panel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
 
-    /**
-     * Creates a temporary placeholder panel for tabs not yet implemented.
-     * Replace each call with the real panel class when it is ready.
-     *
-     * @param heading     bold heading text shown at the top
-     * @param description descriptive subtitle shown below the heading
-     * @return a JPanel centred placeholder
-     */
-    private JPanel createStubPanel(String heading, String description) {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(245, 245, 245));
-
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 189, 189)),
-                BorderFactory.createEmptyBorder(30, 50, 30, 50)
-        ));
-
-        JLabel lblHeading = new JLabel(heading);
-        lblHeading.setFont(new Font("Arial", Font.BOLD, 22));
-        lblHeading.setForeground(new Color(33, 33, 33));
-        lblHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
-        card.add(lblHeading);
-
-        card.add(Box.createVerticalStrut(10));
-
-        JLabel lblDesc = new JLabel(description);
-        lblDesc.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblDesc.setForeground(new Color(117, 117, 117));
-        lblDesc.setAlignmentX(Component.CENTER_ALIGNMENT);
-        card.add(lblDesc);
-
-        panel.add(card);
-        return panel;
+    JButton createSidebarButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Arial Black", Font.BOLD, 18));
+        btn.setBackground(INACTIVE_BG);
+        btn.setForeground(INACTIVE_FG);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setBorder(null);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return btn;
     }
 }
