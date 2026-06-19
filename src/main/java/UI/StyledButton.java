@@ -19,19 +19,19 @@ public class StyledButton extends JButton {
         switch (style.toLowerCase()) {
             case "success":
                 setBackground(new Color(76, 175, 80));
-                setForeground(Color.WHITE);
+                setForeground(Color.GREEN);
                 break;
             case "danger":
                 setBackground(new Color(244, 67, 54));
-                setForeground(Color.WHITE);
+                setForeground(Color.RED);
                 break;
             case "info":
                 setBackground(new Color(33, 150, 243));
-                setForeground(Color.WHITE);
+                setForeground(Color.BLUE);
                 break;
             case "warning":
                 setBackground(new Color(255, 193, 7));
-                setForeground(Color.BLACK);
+                setForeground(Color.RED);
                 break;
             default:
                 setBackground(new Color(200, 200, 200));

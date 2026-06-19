@@ -288,7 +288,7 @@ public class CancelBookingPanel extends JFrame implements ActionListener {
 
         btnCancelSelected = new JButton("CANCEL BOOKING");
         btnCancelSelected.setBounds(700, 75, 150, 40);
-        btnCancelSelected.setFont(new Font("Arial Black", Font.BOLD, 13));
+        btnCancelSelected.setFont(new Font("Arial Black", Font.BOLD, 10));
         btnCancelSelected.setBackground(Color.decode("#C0392B"));
         btnCancelSelected.setForeground(Color.WHITE);
         btnCancelSelected.setBorderPainted(false);

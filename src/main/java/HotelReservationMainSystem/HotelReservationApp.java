@@ -13,7 +13,7 @@ public class HotelReservationApp {
 
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
         } catch (Exception e) {
             System.err.println("Failed to set look and feel: " + e.getMessage());
         }
