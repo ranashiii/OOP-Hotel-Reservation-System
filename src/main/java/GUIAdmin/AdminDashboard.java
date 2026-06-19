@@ -1,147 +1,215 @@
 package GUIAdmin;
 
+import UI.StyledButton;
+import Utilities.Logger;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
-public class AdminDashboard extends JFrame {
-
-    private JPanel sidePan, topPan, contentPanel;
-    JButton btnUserManagement, btnRoomManagement, btnReports, btnReservations, btnLogout;
-    private JButton activeBtn = null;
-    private JLabel lblPageTitle;
-
-    final RoomService roomService = new RoomService();
-    final UserService userService = new UserService();
-    final ReservationService reservationService = new ReservationService();
-    final PaymentService paymentService = new PaymentService();
-
-    private static final Color SIDEBAR_BG = Color.decode("#222222");
-    private static final Color ACTIVE_BG = Color.WHITE;
-    private static final Color ACTIVE_FG = Color.BLACK;
-    private static final Color INACTIVE_BG = Color.decode("#222222");
-    private static final Color INACTIVE_FG = Color.WHITE;
-
+public class AdminDashboard extends JFrame implements ActionListener {
+    
+    private JTabbedPane tabbedPane;
+    private RoomService roomService;
+    private ReservationService reservationService;
+    private PaymentService paymentService;
+    
     public AdminDashboard() {
-        setTitle("Hotel Reservation System - ADMIN ACCESS");
-        setSize(1200, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null);
-        setResizable(false);
-        setLocationRelativeTo(null);
-
-        sidePan = new JPanel();
-        sidePan.setBounds(0, 0, 300, 700);
-        sidePan.setLayout(null);
-        sidePan.setBackground(SIDEBAR_BG);
-        add(sidePan);
-
-        JLabel lblHotel = new JLabel("HOTEL");
-        lblHotel.setBounds(10, 10, 280, 50);
-        lblHotel.setFont(new Font("Arial Black", Font.BOLD, 40));
-        lblHotel.setForeground(Color.WHITE);
-        sidePan.add(lblHotel);
-
-        JLabel lblMgmt = new JLabel("MANAGEMENT");
-        lblMgmt.setBounds(10, 55, 280, 40);
-        lblMgmt.setFont(new Font("Arial Black", Font.BOLD, 26));
-        lblMgmt.setForeground(Color.WHITE);
-        sidePan.add(lblMgmt);
-
-        JButton btnHomePage = createSidebarButton("Home Page");
-        btnHomePage.setBounds(0, 160, 300, 50);
-        btnHomePage.addActionListener(e -> {
-        dispose();
-        new HomePage().setVisible(true);
-        });
-        sidePan.add(btnHomePage);
-
-        btnUserManagement = createSidebarButton("User Management");
-        btnUserManagement.setBounds(0, 230, 300, 50);
-        sidePan.add(btnUserManagement);
-
-        btnRoomManagement = createSidebarButton("Room Management");
-        btnRoomManagement.setBounds(0, 300, 300, 50);
-        sidePan.add(btnRoomManagement);
-
-        btnReports = createSidebarButton("Reports");
-        btnReports.setBounds(0, 370, 300, 50);
-        sidePan.add(btnReports);
-
-        btnReservations = createSidebarButton("Reservations");
-        btnReservations.setBounds(0, 440, 300, 50);
-        sidePan.add(btnReservations);
-
-        btnLogout = createSidebarButton("Logout");
-        btnLogout.setBounds(0, 600, 300, 50);
-        sidePan.add(btnLogout);
-
-        topPan = new JPanel();
-        topPan.setBounds(0, 0, 1200, 150);
-        topPan.setLayout(null);
-        topPan.setBackground(Color.WHITE);
-        add(topPan);
-
-        lblPageTitle = new JLabel("ADMIN DASHBOARD");
-        lblPageTitle.setBounds(350, 50, 800, 80);
-        lblPageTitle.setFont(new Font("Arial Black", Font.BOLD, 55));
-        lblPageTitle.setForeground(Color.BLACK);
-        topPan.add(lblPageTitle);
-
-        contentPanel = new JPanel();
-        contentPanel.setBounds(310, 160, 870, 510);
-        contentPanel.setLayout(null);
-        contentPanel.setBackground(Color.decode("#F5F5F5"));
-        add(contentPanel);
-
-        btnUserManagement.addActionListener(e ->
-            switchTo(btnUserManagement, "USER MANAGEMENT", new UserManagementPanel(this, userService)));
-
-        btnRoomManagement.addActionListener(e ->
-            switchTo(btnRoomManagement, "ROOM MANAGEMENT", new RoomManagementPanel(this, roomService)));
-
-        btnReports.addActionListener(e ->
-            switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel(this, roomService, userService, reservationService, paymentService)));
-
-        btnReservations.addActionListener(e ->
-            switchTo(btnReservations, "RESERVATIONS", new ReservationsPanel(this, reservationService)));
-
-        btnLogout.addActionListener(e -> {
-            int c = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-            if (c == JOptionPane.YES_OPTION) System.exit(0);
-        });
-
-        switchTo(btnReports, "REPORTS & STATISTICS",
-        new ReportsPanel(this, roomService, userService, reservationService, paymentService));
-        }
-
-    void switchTo(JButton clicked, String title, JPanel panel) {
-        if (activeBtn != null) {
-            activeBtn.setBackground(INACTIVE_BG);
-            activeBtn.setForeground(INACTIVE_FG);
-        }
-        clicked.setBackground(ACTIVE_BG);
-        clicked.setForeground(ACTIVE_FG);
-        activeBtn = clicked;
-
-        lblPageTitle.setText(title);
-
-        contentPanel.removeAll();
-        panel.setBounds(0, 0, 870, 510);
-        contentPanel.add(panel);
-        contentPanel.revalidate();
-        contentPanel.repaint();
+        this.roomService = new RoomService();
+        this.reservationService = new ReservationService();
+        this.paymentService = new PaymentService();
+        
+        initWindow();
+        createComponents();
+        Logger.getInstance().info("AdminDashboardMain opened");
     }
+    
+    private int countRoomsByStatus(String status) {
+        int count = 0;
+        for (String[] room : roomService.findAllRooms()) {
+            if (room[4].equals(status)) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    private void initWindow() {
+        setTitle("Admin Dashboard");
+        setSize(1200, 800);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+    }
+    
+    private void createComponents() {
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(new Color(45, 85, 130));
+        
+        JLabel lblTitle = new JLabel("ADMIN DASHBOARD");
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        topPanel.add(lblTitle, BorderLayout.WEST);
+        
+        add(topPanel, BorderLayout.NORTH);
+        
+        tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Dashboard", createDashboardPanel());
+        tabbedPane.addTab("System Statistics", createStatisticsPanel());
+        tabbedPane.addTab("Financial Reports", createFinancialPanel());
+        tabbedPane.addTab("System Settings", createSettingsPanel());
+        
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+    
+    private JPanel createDashboardPanel() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        panel.add(createStatCard("Total Rooms", String.valueOf(roomService.findAllRooms().size())));
+        panel.add(createStatCard("Available Rooms", String.valueOf(countRoomsByStatus("AVAILABLE"))));
+        panel.add(createStatCard("Active Reservations", String.valueOf(reservationService.countActiveReservations())));
+        panel.add(createStatCard("Total Revenue", "PHP " + String.format("%.2f", paymentService.totalRevenue())));
+        
+        return panel;
+    }
+    
+    private JPanel createStatCard(String title, String value) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(new Color(240, 240, 240));
+        card.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 2));
+        
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
+        
+        JLabel lblValue = new JLabel(value);
+        lblValue.setFont(new Font("Arial", Font.BOLD, 24));
+        lblValue.setForeground(new Color(70, 130, 180));
+        lblValue.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+        lblValue.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        card.add(lblTitle, BorderLayout.NORTH);
+        card.add(lblValue, BorderLayout.CENTER);
+        
+        return card;
+    }
+    
+    private JPanel createStatisticsPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Courier", Font.PLAIN, 12));
+        
+        JButton btnRefresh = new StyledButton("Refresh Stats", "info");
+        btnRefresh.addActionListener(e -> {
+            int totalRooms = roomService.findAllRooms().size();
+            int availableRooms = countRoomsByStatus("AVAILABLE");
+            int occupiedRooms = countRoomsByStatus("OCCUPIED");
+            double occupancyRate = totalRooms == 0 ? 0.0 : (occupiedRooms / (double) totalRooms) * 100;
+            
+            StringBuilder stats = new StringBuilder();
+            stats.append("===== SYSTEM STATISTICS =====\n\n");
+            
+            stats.append("ROOMS:\n");
+            stats.append("  Total Rooms: ").append(totalRooms).append("\n");
+            stats.append("  Available: ").append(availableRooms).append("\n");
+            stats.append("  Occupied: ").append(occupiedRooms).append("\n");
+            stats.append("  Occupancy Rate: ").append(String.format("%.2f", occupancyRate)).append("%\n\n");
+            
+            stats.append("RESERVATIONS:\n");
+            stats.append("  Total Reservations: ").append(reservationService.countAllReservations()).append("\n");
+            stats.append("  Active: ").append(reservationService.countActiveReservations()).append("\n\n");
+            
+            stats.append("PAYMENTS:\n");
+            stats.append("  Total Transactions: ").append(paymentService.findAllPayments().size()).append("\n");
+            stats.append("  Total Revenue: PHP ").append(String.format("%.2f", paymentService.totalRevenue())).append("\n");
+            
+            textArea.setText(stats.toString());
+        });
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(btnRefresh);
+        
+        panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createFinancialPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Courier", Font.PLAIN, 12));
+        
+        JButton btnRefresh = new StyledButton("Generate Report", "success");
+        btnRefresh.addActionListener(e -> {
+            List<String[]> allPayments = paymentService.findAllPayments();
+            
+            StringBuilder report = new StringBuilder();
+            report.append("===== FINANCIAL REPORT =====\n\n");
+            report.append("Total Revenue: PHP ").append(String.format("%.2f", paymentService.totalRevenue())).append("\n");
+            report.append("Total Transactions: ").append(allPayments.size()).append("\n\n");
+            report.append("Recent Payments:\n");
+            
+            int start = Math.max(0, allPayments.size() - 5);
+            if (allPayments.isEmpty()) {
+                report.append("  No payments recorded yet.\n");
+            } else {
+                for (int i = start; i < allPayments.size(); i++) {
+                    String[] p = allPayments.get(i);
+                    report.append("  ").append(p[0]).append(" | Room ").append(p[1])
+                          .append(" | PHP ").append(p[2]).append(" | ").append(p[3]).append("\n");
+                }
+            }
+            
+            textArea.setText(report.toString());
+        });
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(btnRefresh);
+        
+        panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createSettingsPanel() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+        
+        JLabel lblSettings = new JLabel("System Settings & Configuration");
+        lblSettings.setFont(new Font("Arial", Font.BOLD, 14));
+        lblSettings.setBounds(30, 30, 300, 25);
+        panel.add(lblSettings);
+        
+        JLabel lblBackup = new JLabel("Database Backup:");
+        lblBackup.setBounds(30, 80, 120, 25);
+        JButton btnBackup = new StyledButton("Backup Now", "info");
+        btnBackup.setBounds(160, 80, 150, 30);
+        btnBackup.addActionListener(e -> Logger.getInstance().info("Database backup initiated"));
+        panel.add(lblBackup);
+        panel.add(btnBackup);
+        
+        JLabel lblLogs = new JLabel("View System Logs:");
+        lblLogs.setBounds(30, 130, 120, 25);
+        JButton btnLogs = new StyledButton("View Logs", "info");
+        btnLogs.setBounds(160, 130, 150, 30);
+        btnLogs.addActionListener(e -> Logger.getInstance().info("System logs requested"));
+        panel.add(lblLogs);
+        panel.add(btnLogs);
+        
+        return panel;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
 
-    JButton createSidebarButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Arial Black", Font.BOLD, 18));
-        btn.setBackground(INACTIVE_BG);
-        btn.setForeground(INACTIVE_FG);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setBorder(null);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
     }
 }
