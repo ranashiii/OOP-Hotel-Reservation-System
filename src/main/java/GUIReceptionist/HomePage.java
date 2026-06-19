@@ -14,7 +14,7 @@ public class HomePage extends JFrame implements ActionListener{
     private String receptionistName;
     
     
-    HomePage(){
+    public HomePage(){
         this.receptionistName = "";
         functionMenu();
         

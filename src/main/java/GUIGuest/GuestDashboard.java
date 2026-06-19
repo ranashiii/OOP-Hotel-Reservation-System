@@ -21,7 +21,7 @@ public class GuestDashboard extends JFrame implements ActionListener {
     private JButton btnGProfile;
     private JButton btnLogout;
 
-    GuestDashboard() {
+    public GuestDashboard() {
         setTitle("Hotel Guest System - Dashboard");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
