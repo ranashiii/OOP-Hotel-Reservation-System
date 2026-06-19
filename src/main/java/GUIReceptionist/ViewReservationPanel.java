@@ -12,7 +12,8 @@ import javax.swing.table.DefaultTableModel;
 
 public class ViewReservationPanel extends JFrame implements ActionListener{
 
-    private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSidePay, btnSideReserve, btnHomePage, btnRefresh;
+    private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSidePay, btnSideReserve,
+            btnSideCancel, btnHomePage, btnRefresh, btnCancelSelected;
     private JLabel lblReception, lblHotel, lblManagement, lblDate, lblRecent, lblTotalReservations;
     private JPanel sidePan, topPan, dashboardPanel, recentPanel;
     private JTable tblReservations;
@@ -136,6 +137,18 @@ public class ViewReservationPanel extends JFrame implements ActionListener{
         btnSideReserve.setBorder(null);
         btnSideReserve.addActionListener(this);
         sidePan.add(btnSideReserve);
+
+        btnSideCancel = new JButton ("Cancel Booking");
+        btnSideCancel.setBounds(0, 580, 300, 50);
+        btnSideCancel.setBackground(Color.decode("#222222"));
+        btnSideCancel.setForeground(Color.WHITE);
+        btnSideCancel.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideCancel.setBorderPainted(false);
+        btnSideCancel.setFocusPainted(false);
+        btnSideCancel.setBorder(null);
+        btnSideCancel.addActionListener(this);
+        sidePan.add(btnSideCancel);
     }
 
     private void topPanel() {
@@ -211,6 +224,14 @@ public class ViewReservationPanel extends JFrame implements ActionListener{
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.addActionListener(this);
         recentPanel.add(btnRefresh);
+
+        btnCancelSelected = new JButton("Cancel Selected");
+        btnCancelSelected.setBounds(580, 415, 130, 35);
+        btnCancelSelected.setFont(new Font("Arial", Font.BOLD, 12));
+        btnCancelSelected.setBackground(Color.decode("#C0392B"));
+        btnCancelSelected.setForeground(Color.WHITE);
+        btnCancelSelected.addActionListener(this);
+        recentPanel.add(btnCancelSelected);
     }
 
     public void setReservationData(Object[][] data){
@@ -244,6 +265,12 @@ public class ViewReservationPanel extends JFrame implements ActionListener{
         }else if (e.getSource() == btnSideDash) {
             dispose();
             new ReceptionistDashboard().setVisible(true);
+        }else if(e.getSource() == btnSideCancel){
+            dispose();
+            new CancelBookingPanel().setVisible(true);
+        }else if(e.getSource() == btnCancelSelected){
+            dispose();
+            new CancelBookingPanel().setVisible(true);
         }else if(e.getSource() == btnRefresh){
             refreshDisplay();
         }

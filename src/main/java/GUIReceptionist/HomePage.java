@@ -8,7 +8,7 @@ import javax.swing.*;
 
 public class HomePage extends JFrame implements ActionListener{
         
-    private JButton btnRoomBooking, btnRegistration, btnDashBoard, btnPayment, btnReservation,
+    private JButton btnRoomBooking, btnRegistration, btnDashBoard, btnPayment, btnReservation, btnCancelBooking,
             btnSideDash, btnSideRegister, btnSideCheckIn, btnSideCheckOut, btnSidePay, btnSideReserve, btnHomePage;
     private JLabel lblReception, lblReceptionName;
     private String receptionistName;
@@ -74,7 +74,7 @@ public class HomePage extends JFrame implements ActionListener{
         add(btnRoomBooking);
         
         btnPayment = new JButton ("PAYMENT ");
-        btnPayment.setBounds(310, 400, 245, 200);
+        btnPayment.setBounds(160, 400, 245, 200);
         btnPayment.setBackground(Color.BLACK);
         btnPayment.setForeground(Color.WHITE);
         btnPayment.setFont(new Font ("Arial Black", Font.BOLD, 20));
@@ -86,7 +86,7 @@ public class HomePage extends JFrame implements ActionListener{
         add(btnPayment);
         
         btnReservation = new JButton ("RESERVATION");
-        btnReservation.setBounds(650, 400, 245, 200);
+        btnReservation.setBounds(480, 400, 245, 200);
         btnReservation.setBackground(Color.BLACK);
         btnReservation.setForeground(Color.WHITE);
         btnReservation.setFont(new Font ("Arial Black", Font.BOLD, 20));
@@ -96,6 +96,18 @@ public class HomePage extends JFrame implements ActionListener{
         btnReservation.setBorder(null);
         btnReservation.addActionListener(this);
         add(btnReservation);
+
+        btnCancelBooking = new JButton ("CANCEL BOOKING");
+        btnCancelBooking.setBounds(800, 400, 245, 200);
+        btnCancelBooking.setBackground(Color.BLACK);
+        btnCancelBooking.setForeground(Color.WHITE);
+        btnCancelBooking.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnCancelBooking.setBorderPainted(false);
+        btnCancelBooking.setFocusPainted(false);
+        btnCancelBooking.setBorder(null);
+        btnCancelBooking.addActionListener(this);
+        add(btnCancelBooking);
     }
 
     public void setReceptionistName(String name){
@@ -121,6 +133,9 @@ public class HomePage extends JFrame implements ActionListener{
         }else if(e.getSource() == btnReservation){
             dispose();
             new ViewReservationPanel().setVisible(true);
+        }else if(e.getSource() == btnCancelBooking){
+            dispose();
+            new CancelBookingPanel().setVisible(true);
         }
         
     }

@@ -12,7 +12,7 @@ import javax.swing.table.DefaultTableModel;
 public class ReceptionistDashboard extends JFrame implements ActionListener{
 
     private JButton btnSideDash, btnSideRegister, btnSideRoomBooking, btnSideCheckIn, btnSideCheckOut,
-            btnSidePay, btnSideReserve, btnHomePage, btnRefresh;
+            btnSidePay, btnSideReserve, btnSideCancel, btnHomePage, btnRefresh;
     private JLabel lblReception, lblHotel, lblManagement, lblDate, lblReceptionistName, lblReceptionistRole,
             lblRecent, lblCheckInCount, lblCheckOutCount, lblAvailableRooms, lblOccupancyRate, lblTotalReservations;
     private JPanel sidePan, topPan, dashboardPanel, card1, card2, card3, card4, recentPanel;
@@ -144,6 +144,18 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         btnSideReserve.setBorder(null);
         btnSideReserve.addActionListener(this);
         sidePan.add(btnSideReserve);
+
+        btnSideCancel = new JButton ("Cancel Booking");
+        btnSideCancel.setBounds(0, 580, 300, 50);
+        btnSideCancel.setBackground(Color.decode("#222222"));
+        btnSideCancel.setForeground(Color.WHITE);
+        btnSideCancel.setFont(new Font ("Arial Black", Font.BOLD, 18));
+
+        btnSideCancel.setBorderPainted(false);
+        btnSideCancel.setFocusPainted(false);
+        btnSideCancel.setBorder(null);
+        btnSideCancel.addActionListener(this);
+        sidePan.add(btnSideCancel);
     }
 
     private void topPanel() {
@@ -336,6 +348,9 @@ public class ReceptionistDashboard extends JFrame implements ActionListener{
         }else if(e.getSource() == btnSideReserve){
             dispose();
             new ViewReservationPanel().setVisible(true);
+        }else if(e.getSource() == btnSideCancel){
+            dispose();
+            new CancelBookingPanel().setVisible(true);
         }else if(e.getSource() == btnRefresh){
             refreshDisplay();
         }
