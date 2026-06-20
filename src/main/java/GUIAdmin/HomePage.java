@@ -1,81 +1,128 @@
 package GUIAdmin;
 
+import Services.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class HomePage extends JFrame {
 
+    private JPanel contentPanel;
+    private JButton btnReports, btnUserManagement, btnRoomManagement, btnReservations;
+    private JPanel sidebar;
+
     public HomePage() {
-        setTitle("Hotel Reservation System - ADMIN DASHBOARD");
+        setTitle("Admin Home");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null);
-        setResizable(false);
         setLocationRelativeTo(null);
-        getContentPane().setBackground(Color.decode("#F0F0F0"));
+        setLayout(null);   // <-- NULL LAYOUT
+        setResizable(false);
+        getContentPane().setBackground(Color.WHITE);
 
-        JLabel lblTitle = new JLabel("ADMIN DASHBOARD");
-        lblTitle.setBounds(0, 40, 1200, 90);
-        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 70));
-        lblTitle.setForeground(Color.BLACK);
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        add(lblTitle);
+        // ---- Sidebar ----
+        sidebar = new JPanel(null);
+        sidebar.setBounds(0, 0, 220, 700);
+        sidebar.setBackground(new Color(34, 34, 34));
+        add(sidebar);
 
-        String[] labels = {
-            "REPORTS",
-            "USER MANAGEMENT",
-            "ROOM MANAGEMENT",
-            "RESERVATIONS"
-        };
+        JLabel lblTitle = new JLabel("ADMIN");
+        lblTitle.setBounds(30, 20, 180, 40);
+        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 28));
+        lblTitle.setForeground(Color.WHITE);
+        sidebar.add(lblTitle);
 
-        int btnW = 380, btnH = 200, gapX = 40, gapY = 30;
-        int startX = 190, startY = 190;
+        JLabel lblSub = new JLabel("PANEL");
+        lblSub.setBounds(30, 60, 180, 30);
+        lblSub.setFont(new Font("Arial", Font.BOLD, 16));
+        lblSub.setForeground(new Color(200, 200, 200));
+        sidebar.add(lblSub);
 
-        for (int i = 0; i < labels.length; i++) {
-            int col = i % 2;
-            int row = i / 2;
-            int x   = startX + col * (btnW + gapX);
-            int y   = startY + row * (btnH + gapY);
+        btnReports = createNavButton("REPORTS", 30, 130);
+        btnUserManagement = createNavButton("USER MANAGEMENT", 30, 200);
+        btnRoomManagement = createNavButton("ROOM MANAGEMENT", 30, 270);
+        btnReservations = createNavButton("RESERVATIONS", 30, 340);
 
-            JButton btn = new JButton(labels[i]);
-            btn.setBounds(x, y, btnW, btnH);
-            btn.setBackground(Color.BLACK);
-            btn.setForeground(Color.WHITE);
-            btn.setFont(new Font("Arial Black", Font.BOLD, 22));
-            btn.setBorderPainted(false);
-            btn.setFocusPainted(false);
-            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        sidebar.add(btnReports);
+        sidebar.add(btnUserManagement);
+        sidebar.add(btnRoomManagement);
+        sidebar.add(btnReservations);
 
-            final String label = labels[i];
-            btn.addActionListener(e -> onButtonClicked(label));
-            add(btn);
-        }
+        JButton btnLogout = new JButton("LOGOUT");
+        btnLogout.setBounds(30, 600, 160, 40);
+        btnLogout.setBackground(new Color(200, 50, 50));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setFont(new Font("Arial Black", Font.BOLD, 14));
+        btnLogout.setFocusPainted(false);
+        btnLogout.setBorderPainted(false);
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(HomePage.this,
+                    "Are you sure you want to logout?", "Logout",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                HotelReservationMainSystem.SessionManager.getInstance().logout();
+                dispose();
+                new GUILogin.LoginFrame().setVisible(true);
+            }
+        });
+        sidebar.add(btnLogout);
+
+        // ---- Content area ----
+        contentPanel = new JPanel(null);
+        contentPanel.setBounds(220, 0, 980, 700);
+        contentPanel.setBackground(Color.WHITE);
+        add(contentPanel);
+
+        btnReports.addActionListener(e -> switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel()));
+        btnUserManagement.addActionListener(e -> switchTo(btnUserManagement, "USER MANAGEMENT", new UserManagementPanel()));
+        btnRoomManagement.addActionListener(e -> switchTo(btnRoomManagement, "ROOM MANAGEMENT", new RoomManagementPanel()));
+        btnReservations.addActionListener(e -> switchTo(btnReservations, "RESERVATIONS", new ReservationsPanel()));
+
+        switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel());
     }
 
-    private void onButtonClicked(String label) {
-        dispose();
-        AdminDashboard dashboard = new AdminDashboard();
-        dashboard.setVisible(true);
+    private JButton createNavButton(String text, int x, int y) {
+        JButton btn = new JButton(text);
+        btn.setBounds(x, y, 160, 45);
+        btn.setBackground(new Color(50, 50, 50));
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Arial Black", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(new Color(70, 70, 70));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(new Color(50, 50, 50));
+            }
+        });
+        return btn;
+    }
 
-        switch (label) {
-            case "REPORTS":
-                dashboard.switchTo(dashboard.btnReports, "REPORTS & STATISTICS",
-                    new ReportsPanel(dashboard, dashboard.roomService,
-                        dashboard.userService, dashboard.reservationService,
-                        dashboard.paymentService));
-                break;
-            case "USER MANAGEMENT":
-                dashboard.switchTo(dashboard.btnUserManagement, "USER MANAGEMENT",
-                    new UserManagementPanel(dashboard, dashboard.userService));
-                break;
-            case "ROOM MANAGEMENT":
-                dashboard.switchTo(dashboard.btnRoomManagement, "ROOM MANAGEMENT",
-                    new RoomManagementPanel(dashboard, dashboard.roomService));
-                break;
-            case "RESERVATIONS":
-                dashboard.switchTo(dashboard.btnReservations, "RESERVATIONS",
-                    new ReservationsPanel(dashboard, dashboard.reservationService));
-                break;
-        }
+    private void switchTo(JButton activeButton, String title, JPanel panel) {
+        btnReports.setBackground(new Color(50, 50, 50));
+        btnUserManagement.setBackground(new Color(50, 50, 50));
+        btnRoomManagement.setBackground(new Color(50, 50, 50));
+        btnReservations.setBackground(new Color(50, 50, 50));
+        activeButton.setBackground(new Color(100, 100, 100));
+
+        contentPanel.removeAll();
+        JPanel wrapper = new JPanel(null);
+        wrapper.setBounds(0, 0, 980, 700);
+        wrapper.setBackground(Color.WHITE);
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setBounds(20, 10, 400, 30);
+        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 22));
+        lblTitle.setForeground(new Color(50, 50, 50));
+        wrapper.add(lblTitle);
+        panel.setBounds(10, 50, 960, 630);
+        wrapper.add(panel);
+        contentPanel.add(wrapper);
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
 }

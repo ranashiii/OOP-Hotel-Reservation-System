@@ -1,214 +1,162 @@
 package GUIAdmin;
 
+import Models.User;
+import Services.UserService;
+import Utilities.HotelException;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
-public class UserManagementPanel extends JPanel {
+public class UserManagementPanel extends JPanel implements ActionListener {
 
-    private static final Color DARK = Color.decode("#222222");
+    private JTable userTable;
+    private DefaultTableModel model;
+    private JLabel lblTotal;
+    private JButton btnRefresh, btnAdd, btnDelete;
+    private JTextField txtUsername, txtPassword, txtEmail;
+    private JComboBox<String> cbAccessLevel;
 
-    private final JFrame parent;
-    private final UserService userService;
-    private JLabel lblCount;
+    private UserService userService = new UserService();
 
-    public UserManagementPanel(JFrame parent, UserService userService) {
-        this.parent = parent;
-        this.userService = userService;
-        setLayout(null);
-        setBackground(Color.decode("#F5F5F5"));
-        buildUI();
-    }
+    public UserManagementPanel() {
+        setLayout(new BorderLayout());
 
-    private void buildUI() {
-        JPanel formPanel = new JPanel(null);
-        formPanel.setBounds(20, 20, 830, 460);
-        formPanel.setBackground(Color.WHITE);
-        add(formPanel);
+        // Top panel
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblTotal = new JLabel("Total Users: 0");
+        topPanel.add(lblTotal);
+        btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(this);
+        topPanel.add(btnRefresh);
+        btnAdd = new JButton("Add User");
+        btnAdd.addActionListener(this);
+        topPanel.add(btnAdd);
+        btnDelete = new JButton("Delete Selected");
+        btnDelete.addActionListener(this);
+        topPanel.add(btnDelete);
+        add(topPanel, BorderLayout.NORTH);
 
-        JLabel lblTitle = new JLabel("USER MANAGEMENT");
-        lblTitle.setBounds(30, 20, 500, 35);
-        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 20));
-        formPanel.add(lblTitle);
+        // Table
+        String[] columns = {"ID", "Username", "Email", "Access Level", "Active"};
+        model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        userTable = new JTable(model);
+        userTable.setRowHeight(25);
+        userTable.getTableHeader().setFont(new Font("Arial Black", Font.BOLD, 12));
+        userTable.getTableHeader().setBackground(Color.decode("#222222"));
+        userTable.getTableHeader().setForeground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(userTable);
+        add(scroll, BorderLayout.CENTER);
 
-        lblCount = new JLabel("Total staff accounts: " + userService.findAllUsers().size());
-        lblCount.setBounds(30, 60, 400, 25);
-        lblCount.setFont(new Font("Arial Black", Font.PLAIN, 13));
-        formPanel.add(lblCount);
-
-        addLabel(formPanel, "Full Name:", 30, 100);
-        JTextField txtName = new JTextField();
-        txtName.setBounds(30, 128, 360, 40);
-        txtName.setFont(new Font("Arial", Font.PLAIN, 14));
-        formPanel.add(txtName);
-
-        addLabel(formPanel, "Email:", 30, 180);
-        JTextField txtEmail = new JTextField();
-        txtEmail.setBounds(30, 208, 360, 40);
-        txtEmail.setFont(new Font("Arial", Font.PLAIN, 14));
-        formPanel.add(txtEmail);
-
-        addLabel(formPanel, "Password:", 30, 260);
-        JPasswordField txtPassword = new JPasswordField();
-        txtPassword.setBounds(30, 288, 360, 40);
-        txtPassword.setFont(new Font("Arial", Font.PLAIN, 14));
+        // Form panel (bottom)
+        JPanel formPanel = new JPanel(new GridLayout(3, 4, 5, 5));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Add/Edit User"));
+        formPanel.add(new JLabel("Username:"));
+        txtUsername = new JTextField();
+        formPanel.add(txtUsername);
+        formPanel.add(new JLabel("Password:"));
+        txtPassword = new JTextField();
         formPanel.add(txtPassword);
+        formPanel.add(new JLabel("Email:"));
+        txtEmail = new JTextField();
+        formPanel.add(txtEmail);
+        formPanel.add(new JLabel("Access Level:"));
+        cbAccessLevel = new JComboBox<>(new String[]{"Guest", "Receptionist", "Admin"});
+        formPanel.add(cbAccessLevel);
+        JButton btnSave = new JButton("Save");
+        btnSave.addActionListener(e -> saveUser());
+        formPanel.add(btnSave);
+        JButton btnClear = new JButton("Clear");
+        btnClear.addActionListener(e -> clearForm());
+        formPanel.add(btnClear);
+        add(formPanel, BorderLayout.SOUTH);
 
-        JButton btnAdd = createDarkButton("ADD USER");
-        btnAdd.setBounds(30, 360, 160, 45);
-        btnAdd.addActionListener(e -> {
-            String name  = txtName.getText().trim();
-            String email = txtEmail.getText().trim();
-            String pass  = new String(txtPassword.getPassword()).trim();
-
-            if (name.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                JOptionPane.showMessageDialog(parent, "All fields are required.",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE); return;
-            }
-            if (!userService.isValidEmail(email)) {
-                JOptionPane.showMessageDialog(parent, "Enter a valid email address.",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE); return;
-            }
-            if (userService.userExists(email)) {
-                JOptionPane.showMessageDialog(parent, "A user with that email already exists.",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE); return;
-            }
-            userService.addUser(name, email, pass);
-            JOptionPane.showMessageDialog(parent, "Staff account added successfully.",
-                "Success", JOptionPane.INFORMATION_MESSAGE);
-            txtName.setText(""); txtEmail.setText(""); txtPassword.setText("");
-            refreshCount();
-        });
-        formPanel.add(btnAdd);
-
-        JButton btnRemove = createDarkButton("REMOVE USER");
-        btnRemove.setBounds(210, 360, 160, 45);
-        btnRemove.addActionListener(e -> {
-            if (userService.findAllUsers().isEmpty()) {
-                JOptionPane.showMessageDialog(parent,
-                    "No users available to remove.", "Remove User",
-                    JOptionPane.WARNING_MESSAGE); return;
-            }
-            showRemoveDialog();
-        });
-        formPanel.add(btnRemove);
-
-        JButton btnView = createDarkButton("VIEW ALL USERS");
-        btnView.setBounds(390, 360, 190, 45);
-        btnView.addActionListener(e -> showUserListDialog());
-        formPanel.add(btnView);
+        loadData();
     }
 
-    void showRemoveDialog() {
-        JDialog dlg = new JDialog(parent, "Remove User", true);
-        dlg.setSize(500, 420);
-        dlg.setLayout(null);
-        dlg.getContentPane().setBackground(Color.WHITE);
-        dlg.setLocationRelativeTo(parent);
-
-        JLabel lbl = new JLabel("Select a user to remove:");
-        lbl.setBounds(20, 15, 350, 25);
-        lbl.setFont(new Font("Arial Black", Font.BOLD, 14));
-        dlg.add(lbl);
-
-        DefaultListModel<String> model = new DefaultListModel<>();
-        for (String[] u : userService.findAllUsers())
-            model.addElement(u[0] + " | " + u[1] + " | " + u[3]);
-
-        JList<String> list = new JList<>(model);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane sp = new JScrollPane(list);
-        sp.setBounds(20, 50, 445, 260);
-        dlg.add(sp);
-
-        JButton btnDo = createDarkButton("REMOVE SELECTED");
-        btnDo.setBounds(20, 325, 200, 40);
-        btnDo.addActionListener(e2 -> {
-            int idx = list.getSelectedIndex();
-            if (idx < 0) {
-                JOptionPane.showMessageDialog(dlg, "Please select a user first.",
-                    "Error", JOptionPane.ERROR_MESSAGE); return;
+    private void loadData() {
+        model.setRowCount(0);
+        try {
+            List<User> users = userService.findAllUsers();
+            lblTotal.setText("Total Users: " + users.size());
+            for (User u : users) {
+                model.addRow(new Object[]{
+                    u.getUserId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getAccessLevel(),
+                    u.isActive() ? "Yes" : "No"
+                });
             }
-            int c = JOptionPane.showConfirmDialog(dlg, "Remove this user?",
-                "Confirm", JOptionPane.YES_NO_OPTION);
-            if (c == JOptionPane.YES_OPTION) {
-                String email = userService.findAllUsers().get(idx)[1];
-                userService.removeUser(email);
-                JOptionPane.showMessageDialog(dlg, "User removed successfully.",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-                dlg.dispose();
-                refreshCount();
-            }
-        });
-        dlg.add(btnDo);
-
-        JButton btnClose = new JButton("Close");
-        btnClose.setBounds(235, 325, 100, 40);
-        btnClose.setBackground(new Color(220, 220, 220));
-        btnClose.setForeground(Color.DARK_GRAY);
-        btnClose.setFocusPainted(false);
-        btnClose.addActionListener(e2 -> dlg.dispose());
-        dlg.add(btnClose);
-
-        dlg.setVisible(true);
-    }
-
-    void showUserListDialog() {
-        JDialog dlg = new JDialog(parent, "All Staff Accounts", true);
-        dlg.setSize(500, 460);
-        dlg.setLayout(null);
-        dlg.getContentPane().setBackground(Color.WHITE);
-        dlg.setLocationRelativeTo(parent);
-
-        JLabel lbl = new JLabel("All Staff Accounts");
-        lbl.setBounds(20, 15, 300, 25);
-        lbl.setFont(new Font("Arial Black", Font.BOLD, 14));
-        dlg.add(lbl);
-
-        DefaultListModel<String> model = new DefaultListModel<>();
-        if (userService.findAllUsers().isEmpty()) {
-            model.addElement("No staff accounts yet.");
-        } else {
-            for (String[] u : userService.findAllUsers())
-                model.addElement(u[0] + " | " + u[1] + " | " + u[3]);
+        } catch (HotelException ex) {
+            JOptionPane.showMessageDialog(this, "Error loading users: " + ex.getMessage());
         }
-        JList<String> list = new JList<>(model);
-        list.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane sp = new JScrollPane(list);
-        sp.setBounds(20, 50, 445, 280);
-        dlg.add(sp);
-
-        JButton btnClose = new JButton("Close");
-        btnClose.setBounds(185, 340, 120, 35);
-        btnClose.setBackground(new Color(220, 220, 220));
-        btnClose.setForeground(Color.DARK_GRAY);
-        btnClose.setFocusPainted(false);
-        btnClose.addActionListener(e -> dlg.dispose());
-        dlg.add(btnClose);
-
-        dlg.setVisible(true);
     }
 
-    void refreshCount() {
-        lblCount.setText("Total staff accounts: " + userService.findAllUsers().size());
+    private void saveUser() {
+        String username = txtUsername.getText().trim();
+        String password = txtPassword.getText().trim();
+        String email = txtEmail.getText().trim();
+        String accessLevel = (String) cbAccessLevel.getSelectedItem();
+
+        if (username.isEmpty() || password.isEmpty() || email.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields are required.");
+            return;
+        }
+
+        try {
+            userService.addUser(username, password, email);
+            // Note: addUser in UserService uses "Guest" as default, but we want to set accessLevel.
+            // We need to update the user after creation. Let's do it manually:
+            User user = userService.getUserByUsername(username);
+            if (user != null) {
+                user.setAccessLevel(accessLevel);
+                userService.updateUser(user);
+            }
+            JOptionPane.showMessageDialog(this, "User added successfully.");
+            loadData();
+            clearForm();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+        }
     }
 
-    void addLabel(JPanel p, String text, int x, int y) {
-        JLabel lbl = new JLabel(text);
-        lbl.setBounds(x, y, 300, 25);
-        lbl.setFont(new Font("Arial Black", Font.BOLD, 14));
-        p.add(lbl);
+    private void clearForm() {
+        txtUsername.setText("");
+        txtPassword.setText("");
+        txtEmail.setText("");
+        cbAccessLevel.setSelectedIndex(0);
     }
 
-    JButton createDarkButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Arial Black", Font.BOLD, 13));
-        btn.setBackground(DARK);
-        btn.setForeground(Color.WHITE);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == btnRefresh) {
+            loadData();
+        } else if (e.getSource() == btnAdd) {
+            clearForm();
+        } else if (e.getSource() == btnDelete) {
+            int row = userTable.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(this, "Select a user to delete.");
+                return;
+            }
+            String username = (String) model.getValueAt(row, 1);
+            int confirm = JOptionPane.showConfirmDialog(this, "Delete user '" + username + "'?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    userService.removeUser(username);
+                    JOptionPane.showMessageDialog(this, "User deleted.");
+                    loadData();
+                } catch (HotelException ex) {
+                    JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+                }
+            }
+        }
     }
 }

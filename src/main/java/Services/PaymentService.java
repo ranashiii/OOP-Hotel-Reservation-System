@@ -20,7 +20,7 @@ import java.util.UUID;
 public class PaymentService {
     private PaymentDAO paymentDAO = new PaymentDAO();
     private ReservationDAO reservationDAO = new ReservationDAO();
-    
+
     /**
      * Process payment for reservation
      * 
@@ -64,12 +64,9 @@ public class PaymentService {
         payment.setPaymentId(paymentId);
         return payment;
     }
-    
+
     /**
      * Validate payment details based on payment method
-     * 
-     * @param payment the payment object to validate
-     * @throws HotelException if validation fails
      */
     private void validatePaymentMethod(Payment payment) throws HotelException {
         if (payment.getPaymentMethod().equals("Cash")) {
@@ -82,12 +79,9 @@ public class PaymentService {
             validateEWallet(payment);
         }
     }
-    
+
     /**
      * Validate credit card payment details
-     * 
-     * @param payment the payment object containing card details
-     * @throws HotelException if validation fails
      */
     private void validateCreditCard(Payment payment) throws HotelException {
         if (payment.getPaymentTypeDetails() == null || payment.getPaymentTypeDetails().isEmpty()) {
@@ -104,12 +98,9 @@ public class PaymentService {
             throw new HotelException("Invalid card number (Luhn validation failed)");
         }
     }
-    
+
     /**
      * Validate E-Wallet payment details (phone number)
-     * 
-     * @param payment the payment object containing e-wallet details
-     * @throws HotelException if validation fails
      */
     private void validateEWallet(Payment payment) throws HotelException {
         if (payment.getPaymentTypeDetails() == null || payment.getPaymentTypeDetails().isEmpty()) {
@@ -120,12 +111,9 @@ public class PaymentService {
             throw new HotelException("Invalid phone number format (must be Philippine format)");
         }
     }
-    
+
     /**
      * Validate Luhn algorithm for credit card
-     * 
-     * @param cardNumber the card number to validate
-     * @return true if valid, false otherwise
      */
     private boolean isValidLuhn(String cardNumber) {
         int sum = 0;
@@ -147,26 +135,17 @@ public class PaymentService {
         
         return sum % 10 == 0;
     }
-    
+
     /**
      * Validate Philippine phone number format
-     * 
-     * @param phoneNumber the phone number to validate
-     * @return true if valid, false otherwise
      */
     private boolean isValidPhoneNumber(String phoneNumber) {
-        return phoneNumber != null && 
+        return phoneNumber != null &&
                (phoneNumber.matches("^09\\d{9}$") || phoneNumber.matches("^\\+639\\d{9}$"));
     }
-    
+
     /**
      * Process refund for payment
-     * 
-     * @param paymentId the payment ID
-     * @param refundAmount the amount to refund
-     * @param refundReason the reason for refund
-     * @return true if refund processed successfully
-     * @throws HotelException if refund fails
      */
     public boolean processRefund(int paymentId, BigDecimal refundAmount, String refundReason) throws HotelException {
         Payment payment = paymentDAO.getPaymentById(paymentId);
@@ -184,46 +163,30 @@ public class PaymentService {
         
         return paymentDAO.processRefund(paymentId, refundAmount, refundReason);
     }
-    
+
     /**
      * Get payment by ID
-     * 
-     * @param paymentId the payment ID
-     * @return Payment object if found, null otherwise
-     * @throws HotelException if query fails
      */
     public Payment getPaymentById(int paymentId) throws HotelException {
         return paymentDAO.getPaymentById(paymentId);
     }
-    
+
     /**
      * Get all payments for a reservation
-     * 
-     * @param reservationId the reservation ID
-     * @return List of Payment objects for the reservation
-     * @throws HotelException if query fails
      */
     public List<Payment> getPaymentsByReservationId(int reservationId) throws HotelException {
         return paymentDAO.getPaymentsByReservationId(reservationId);
     }
-    
+
     /**
      * Get all payments
-     * 
-     * @return List of all Payment objects
-     * @throws HotelException if query fails
      */
     public List<Payment> getAllPayments() throws HotelException {
         return paymentDAO.getAllPayments();
     }
-    
+
     /**
      * Get total payments for date range
-     * 
-     * @param startDate start date
-     * @param endDate end date
-     * @return total payment amount in the period
-     * @throws HotelException if query fails
      */
     public BigDecimal getTotalPaymentsByDateRange(LocalDate startDate, LocalDate endDate) throws HotelException {
         if (startDate == null || endDate == null) {
@@ -231,18 +194,25 @@ public class PaymentService {
         }
         return paymentDAO.getTotalPaymentsByDateRange(startDate, endDate);
     }
-    
+
     /**
      * Validate payment method
-     * Valid methods: Cash, Credit Card, E-Wallet
-     * 
-     * @param paymentMethod the payment method to validate
-     * @return true if valid, false otherwise
      */
     private boolean isValidPaymentMethod(String paymentMethod) {
-        return paymentMethod != null && 
-               (paymentMethod.equals("Cash") || 
-                paymentMethod.equals("Credit Card") || 
+        return paymentMethod != null &&
+               (paymentMethod.equals("Cash") ||
+                paymentMethod.equals("Credit Card") ||
                 paymentMethod.equals("E-Wallet"));
+    }
+
+    // =============================================================
+    //  ADMIN CONVENIENCE METHOD (added to fix compilation errors)
+    // =============================================================
+
+    /**
+     * Get all payments (alias for admin panels)
+     */
+    public List<Payment> findAllPayments() throws HotelException {
+        return paymentDAO.getAllPayments();
     }
 }

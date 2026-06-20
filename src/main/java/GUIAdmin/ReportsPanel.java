@@ -1,196 +1,241 @@
 package GUIAdmin;
 
+import Models.Payment;
+import Models.Reservation;
+import Models.Room;
+import Models.User;
+import Services.PaymentService;
+import Services.ReservationService;
+import Services.RoomService;
+import Services.UserService;
+import Utilities.HotelException;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
-import java.util.ArrayList;
-import java.time.LocalDate;
-import java.time.Month;
-import java.time.format.TextStyle;
-import java.util.Locale;
 
 public class ReportsPanel extends JPanel {
+    private JTabbedPane tabbedPane;
+    private JTable roomTable, userTable, reservationTable, paymentTable;
+    private DefaultTableModel roomModel, userModel, reservationModel, paymentModel;
+    private JLabel lblRoomCount, lblUserCount, lblReservationCount, lblPaymentCount;
 
-    private static final Color DARK = Color.decode("#222222");
+    private RoomService roomService = new RoomService();
+    private UserService userService = new UserService();
+    private ReservationService reservationService = new ReservationService();
+    private PaymentService paymentService = new PaymentService();
 
-    static final List<String[]> payments = new ArrayList<>();
+    public ReportsPanel() {
+        setLayout(new BorderLayout());
 
-    private final AdminDashboard dashboard;
-    private final RoomService roomService;
-    private final UserService userService;
-    private final ReservationService reservationService;
-    private final PaymentService paymentService;
+        tabbedPane = new JTabbedPane();
 
-    public ReportsPanel(AdminDashboard dashboard, RoomService rs, UserService us,ReservationService res, PaymentService ps) {
-    this.dashboard = dashboard;
-    this.roomService = rs;
-    this.userService = us;
-    this.reservationService = res;
-    this.paymentService = ps;
-    setLayout(null);
-    setBackground(Color.decode("#F5F5F5"));
-    buildUI();
+        // --- Room Report Tab ---
+        JPanel roomPanel = createRoomReportPanel();
+        tabbedPane.addTab("Rooms", roomPanel);
+
+        // --- User Report Tab ---
+        JPanel userPanel = createUserReportPanel();
+        tabbedPane.addTab("Users", userPanel);
+
+        // --- Reservation Report Tab ---
+        JPanel reservationPanel = createReservationReportPanel();
+        tabbedPane.addTab("Reservations", reservationPanel);
+
+        // --- Payment Report Tab ---
+        JPanel paymentPanel = createPaymentReportPanel();
+        tabbedPane.addTab("Payments", paymentPanel);
+
+        add(tabbedPane, BorderLayout.CENTER);
+        loadAllReports();
     }
 
-    private void buildUI() {
-        String[] cardTitles = {
-        "Total Rooms: " + roomService.findAllRooms().size(),
-        "Available: " + countAvailable(),
-        "Occupied: " + countOccupied(),
-        "Active Reservations: " + reservationService.countActiveReservations(),
-        "Total Reservations: " + reservationService.countAllReservations(),
-        "Occupancy %: " + calcOccupancy()
+    private JPanel createRoomReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblRoomCount = new JLabel("Total Rooms: 0");
+        topPanel.add(lblRoomCount);
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(e -> loadRoomReport());
+        topPanel.add(btnRefresh);
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        String[] columns = {"ID", "Room Number", "Type", "Floor", "Capacity", "Price/Night", "Status"};
+        roomModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
         };
-        
-        int cardW = 270, cardH = 75, gap = 15, startX = 20;
-        for (int i = 0; i < cardTitles.length; i++) {
-        int col = i % 3;
-        int row = i / 3;
-        JPanel card = new JPanel(null);
-        card.setBounds(startX + col * (cardW + gap), 10 + row * (cardH + 10), cardW, cardH);
-        card.setBackground(DARK);
-        JLabel lbl = new JLabel(cardTitles[i]);
-        lbl.setBounds(10, 22, 250, 30);
-        lbl.setFont(new Font("Arial Black", Font.BOLD, 11));
-        lbl.setForeground(Color.WHITE);
-        card.add(lbl);
-        add(card);
-        }
+        roomTable = new JTable(roomModel);
+        roomTable.setRowHeight(25);
+        roomTable.getTableHeader().setFont(new Font("Arial Black", Font.BOLD, 12));
+        roomTable.getTableHeader().setBackground(Color.decode("#222222"));
+        roomTable.getTableHeader().setForeground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(roomTable);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
 
-        JPanel statsPanel = new JPanel(null);
-        statsPanel.setBounds(20, 175, 400, 270);
-        statsPanel.setBackground(DARK);
-        add(statsPanel);
+    private JPanel createUserReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblUserCount = new JLabel("Total Users: 0");
+        topPanel.add(lblUserCount);
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(e -> loadUserReport());
+        topPanel.add(btnRefresh);
+        panel.add(topPanel, BorderLayout.NORTH);
 
-        JLabel lblStats = new JLabel("Statistics");
-        lblStats.setBounds(15, 10, 350, 35);
-        lblStats.setFont(new Font("Arial Black", Font.BOLD, 22));
-        lblStats.setForeground(Color.WHITE);
-        statsPanel.add(lblStats);
-
-        String monthName = LocalDate.now().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
-        String[] stats = {
-        "Total rooms: " + roomService.findAllRooms().size(),
-        "Available rooms: " + countAvailable(),
-        "Occupied rooms: " + countOccupied(),
-        "Total staff accounts: " + userService.findAllUsers().size(),
-        "Total Reservations for the Month of " + monthName + ": " + countReservationsThisMonth(),
-        "Total Revenue Collected for the Month of " + monthName + ": PHP "+ String.format("%.2f", revenueThisMonth())
+        String[] columns = {"ID", "Username", "Email", "Access Level", "Active"};
+        userModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
         };
-        
-        for (int i = 0; i < stats.length; i++) {
-        JLabel s = new JLabel(stats[i]);
-        s.setBounds(15, 55 + i * 38, 370, 22);
-        s.setFont(new Font("Arial Black", Font.PLAIN, 11));
-        s.setForeground(Color.WHITE);
-        statsPanel.add(s);
-        }
-        
-        
-        JPanel recentPayPanel = new JPanel(null);
-        recentPayPanel.setBounds(440, 175, 410, 270);
-        recentPayPanel.setBackground(DARK);
-        add(recentPayPanel);
+        userTable = new JTable(userModel);
+        userTable.setRowHeight(25);
+        userTable.getTableHeader().setFont(new Font("Arial Black", Font.BOLD, 12));
+        userTable.getTableHeader().setBackground(Color.decode("#222222"));
+        userTable.getTableHeader().setForeground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(userTable);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
 
-        JLabel lblRecentPay = new JLabel("Recent Payments");
-        lblRecentPay.setBounds(10, 10, 390, 28);
-        lblRecentPay.setFont(new Font("Arial Black", Font.BOLD, 15));
-        lblRecentPay.setForeground(Color.WHITE);
-        recentPayPanel.add(lblRecentPay);
+    private JPanel createReservationReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblReservationCount = new JLabel("Total Reservations: 0");
+        topPanel.add(lblReservationCount);
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(e -> loadReservationReport());
+        topPanel.add(btnRefresh);
+        panel.add(topPanel, BorderLayout.NORTH);
 
-        List<String[]> allPay = paymentService.findAllPayments();
-        
-        int payStart = Math.max(0, allPay.size() - 5);
-        for (int i = payStart; i < allPay.size(); i++) {
-        String[] p = allPay.get(i);
-        JLabel entry = new JLabel((i - payStart + 1) + ". " + p[0] + " | Rm " + p[1] + " | PHP " + p[2]);
-        entry.setBounds(10, 45 + (i - payStart) * 42, 390, 32);
-        entry.setFont(new Font("Arial Black", Font.PLAIN, 11));
-        entry.setForeground(Color.WHITE);
-        recentPayPanel.add(entry);
-        }
-        
-        if (allPay.isEmpty()) {
-        JLabel empty = new JLabel("No payments recorded yet.");
-        empty.setBounds(10, 45, 380, 25);
-        empty.setFont(new Font("Arial Black", Font.PLAIN, 11));
-        empty.setForeground(Color.LIGHT_GRAY);
-        recentPayPanel.add(empty);
-        }
+        String[] columns = {"ID", "Guest ID", "Room ID", "Check-in", "Check-out", "Status", "Total"};
+        reservationModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        reservationTable = new JTable(reservationModel);
+        reservationTable.setRowHeight(25);
+        reservationTable.getTableHeader().setFont(new Font("Arial Black", Font.BOLD, 12));
+        reservationTable.getTableHeader().setBackground(Color.decode("#222222"));
+        reservationTable.getTableHeader().setForeground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(reservationTable);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
 
-        JButton btnRefresh = new JButton("UPDATE REPORTS");
-        btnRefresh.setBounds(20, 455, 200, 40);
-        btnRefresh.setFont(new Font("Arial Black", Font.BOLD, 13));
-        btnRefresh.setBackground(DARK);
-        btnRefresh.setForeground(Color.WHITE);
-        btnRefresh.setBorderPainted(false);
-        btnRefresh.setFocusPainted(false);
-        btnRefresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnRefresh.addActionListener(e -> {
-            removeAll();
-            buildUI();
-            revalidate();
-            repaint();
-        JOptionPane.showMessageDialog(this,
-        "Report data refreshed.", "Refresh",
-        JOptionPane.INFORMATION_MESSAGE);
-        });
-        add(btnRefresh);
-        }
-    
-        int countAvailable() {
-        int c = 0;
-        for (String[] r : roomService.findAllRooms())
-            if (r[4].equals("AVAILABLE")) c++;
-        return c;
-        }
+    private JPanel createPaymentReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblPaymentCount = new JLabel("Total Payments: 0");
+        topPanel.add(lblPaymentCount);
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.addActionListener(e -> loadPaymentReport());
+        topPanel.add(btnRefresh);
+        panel.add(topPanel, BorderLayout.NORTH);
 
-        int countOccupied() {
-        int c = 0;
-        for (String[] r : roomService.findAllRooms())
-            if (r[4].equals("OCCUPIED")) c++;
-        return c;
-        }
+        String[] columns = {"ID", "Reservation ID", "Amount", "Method", "Status", "Date"};
+        paymentModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        paymentTable = new JTable(paymentModel);
+        paymentTable.setRowHeight(25);
+        paymentTable.getTableHeader().setFont(new Font("Arial Black", Font.BOLD, 12));
+        paymentTable.getTableHeader().setBackground(Color.decode("#222222"));
+        paymentTable.getTableHeader().setForeground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(paymentTable);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
 
-        int countReservationsThisMonth() {
-        int month = LocalDate.now().getMonthValue();
-        int year  = LocalDate.now().getYear();
-        int count = 0;
-        for (String[] r : reservationService.findAllReservations()) {
+    private void loadAllReports() {
+        loadRoomReport();
+        loadUserReport();
+        loadReservationReport();
+        loadPaymentReport();
+    }
+
+    private void loadRoomReport() {
+        roomModel.setRowCount(0);
         try {
-            LocalDate checkIn = LocalDate.parse(r[2]);
-            if (checkIn.getMonthValue() == month && checkIn.getYear() == year)
-                count++;
-        }
-        catch (Exception ignored) {}
-        }
-            return count;
-        }
-
-        double revenueThisMonth() {
-        int month = LocalDate.now().getMonthValue();
-        int year  = LocalDate.now().getYear();
-        double total = 0;
-        for (String[] p : paymentService.findAllPayments()) {
-            try {
-                if (p.length >= 4) {
-                    LocalDate date = LocalDate.parse(p[3]);
-                if (date.getMonthValue() == month && date.getYear() == year)
-                    total += Double.parseDouble(p[2]);
-            } else {
-                total += Double.parseDouble(p[2]);
+            List<Room> rooms = roomService.findAllRooms();
+            lblRoomCount.setText("Total Rooms: " + rooms.size());
+            for (Room r : rooms) {
+                roomModel.addRow(new Object[]{
+                    r.getRoomId(),
+                    r.getRoomNumber(),
+                    r.getRoomType(),
+                    r.getFloor(),
+                    r.getCapacity(),
+                    String.format("%.2f", r.getPricePerNight()),
+                    r.getStatus()
+                });
             }
-            } catch (Exception ignored) {}
+        } catch (HotelException e) {
+            JOptionPane.showMessageDialog(this, "Error loading rooms: " + e.getMessage());
         }
-        return total;
-        }
+    }
 
-    int calcOccupancy() {
-        int total = roomService.findAllRooms().size();
-        if (total == 0) return 0;
-        int occupied = 0;
-        for (String[] r : roomService.findAllRooms())
-            if (r[4].equals("OCCUPIED")) occupied++;
-        return (int)((occupied / (double) total) * 100);
+    private void loadUserReport() {
+        userModel.setRowCount(0);
+        try {
+            List<User> users = userService.findAllUsers();
+            lblUserCount.setText("Total Users: " + users.size());
+            for (User u : users) {
+                userModel.addRow(new Object[]{
+                    u.getUserId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getAccessLevel(),
+                    u.isActive() ? "Yes" : "No"
+                });
+            }
+        } catch (HotelException e) {
+            JOptionPane.showMessageDialog(this, "Error loading users: " + e.getMessage());
+        }
+    }
+
+    private void loadReservationReport() {
+        reservationModel.setRowCount(0);
+        try {
+            List<Reservation> reservations = reservationService.findAllReservations();
+            lblReservationCount.setText("Total Reservations: " + reservations.size());
+            for (Reservation r : reservations) {
+                reservationModel.addRow(new Object[]{
+                    r.getReservationId(),
+                    r.getGuestId(),
+                    r.getRoomId(),
+                    r.getCheckInDate(),
+                    r.getCheckOutDate(),
+                    r.getReservationStatus(),
+                    String.format("%.2f", r.getFinalTotal())
+                });
+            }
+        } catch (HotelException e) {
+            JOptionPane.showMessageDialog(this, "Error loading reservations: " + e.getMessage());
+        }
+    }
+
+    private void loadPaymentReport() {
+        paymentModel.setRowCount(0);
+        try {
+            List<Payment> payments = paymentService.findAllPayments();
+            lblPaymentCount.setText("Total Payments: " + payments.size());
+            for (Payment p : payments) {
+                paymentModel.addRow(new Object[]{
+                    p.getPaymentId(),
+                    p.getReservationId(),
+                    String.format("%.2f", p.getPaymentAmount()),
+                    p.getPaymentMethod(),
+                    p.getPaymentStatus(),
+                    p.getPaymentDate()
+                });
+            }
+        } catch (HotelException e) {
+            JOptionPane.showMessageDialog(this, "Error loading payments: " + e.getMessage());
+        }
     }
 }

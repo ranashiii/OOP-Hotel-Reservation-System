@@ -11,9 +11,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-/**
- * Receptionist view for all reservations.
- */
 public class ViewReservationPanel extends JFrame {
 
     private JTable reservationTable;
@@ -34,7 +31,7 @@ public class ViewReservationPanel extends JFrame {
         add(title, BorderLayout.NORTH);
 
         // Table columns
-        String[] columns = {"ID", "Guest", "Room", "Check-in", "Check-out", "Status"};
+        String[] columns = {"ID", "Guest ID", "Room", "Check-in", "Check-out", "Status"};
         model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
@@ -51,10 +48,9 @@ public class ViewReservationPanel extends JFrame {
             for (Reservation r : reservations) {
                 Room room = roomService.getRoomById(r.getRoomId());
                 String roomNumber = (room != null) ? room.getRoomNumber() : "N/A";
-                // Guest name would need a join; we can show guest ID for now
                 model.addRow(new Object[]{
                     r.getReservationId(),
-                    "Guest ID: " + r.getGuestId(),
+                    "ID: " + r.getGuestId(),
                     roomNumber,
                     r.getCheckInDate(),
                     r.getCheckOutDate(),
@@ -77,11 +73,20 @@ public class ViewReservationPanel extends JFrame {
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
 
-        // Refresh button
+        // Bottom panel with Refresh and Back buttons
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton btnRefresh = new JButton("Refresh");
         btnRefresh.addActionListener(e -> refreshTable());
-        JPanel bottomPanel = new JPanel();
         bottomPanel.add(btnRefresh);
+
+        JButton btnBack = new JButton("Back to Dashboard");
+        btnBack.addActionListener(e -> {
+            dispose();
+            // Open the receptionist dashboard (HomePage)
+            new HomePage().setVisible(true);
+        });
+        bottomPanel.add(btnBack);
+
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
@@ -96,7 +101,7 @@ public class ViewReservationPanel extends JFrame {
                 String roomNumber = (room != null) ? room.getRoomNumber() : "N/A";
                 model.addRow(new Object[]{
                     r.getReservationId(),
-                    "Guest ID: " + r.getGuestId(),
+                    "ID: " + r.getGuestId(),
                     roomNumber,
                     r.getCheckInDate(),
                     r.getCheckOutDate(),

@@ -32,7 +32,6 @@ public class ReceptionistDashboard extends JFrame implements ActionListener {
     private Object[][] reservationData;
 
     ReceptionistDashboard() {
-        // initialise with zeros
         this.todaysCheckIns = 0;
         this.todaysCheckOuts = 0;
         this.availableRooms = 0;
@@ -44,7 +43,7 @@ public class ReceptionistDashboard extends JFrame implements ActionListener {
         topPanel();
         dashboardPan();
 
-        // --- FIX: Load real data from database ---
+        // Load real data from database
         loadDashboardStats();
 
         refreshDisplay();
@@ -57,67 +56,74 @@ public class ReceptionistDashboard extends JFrame implements ActionListener {
         setTitle("Hotel Reservation System - Receptionist Dashboard");
     }
 
-private void loadDashboardStats() {
-    try (Connection conn = DBConfig.getConnection();
-         Statement stmt = conn.createStatement()) {
+    // =============================================================
+    //  LOAD DASHBOARD STATS (with ACTIVE reservations only)
+    // =============================================================
+    private void loadDashboardStats() {
+        try (Connection conn = DBConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
 
-        // Helper: get current date as string (works on both MySQL and SQLite)
-        String today = java.time.LocalDate.now().toString();
+            String today = java.time.LocalDate.now().toString();
 
-        // 1. Today's check-ins (check_in_date == today)
-        ResultSet rs1 = stmt.executeQuery(
-            "SELECT COUNT(*) FROM reservations WHERE DATE(check_in_date) = DATE('" + today + "')");
-        if (rs1.next()) this.todaysCheckIns = rs1.getInt(1);
+            // 1. Today's check-ins
+            ResultSet rs1 = stmt.executeQuery(
+                "SELECT COUNT(*) FROM reservations WHERE DATE(check_in_date) = DATE('" + today + "')");
+            if (rs1.next()) this.todaysCheckIns = rs1.getInt(1);
 
-        // 2. Today's check-outs
-        ResultSet rs2 = stmt.executeQuery(
-            "SELECT COUNT(*) FROM reservations WHERE DATE(check_out_date) = DATE('" + today + "')");
-        if (rs2.next()) this.todaysCheckOuts = rs2.getInt(1);
+            // 2. Today's check-outs
+            ResultSet rs2 = stmt.executeQuery(
+                "SELECT COUNT(*) FROM reservations WHERE DATE(check_out_date) = DATE('" + today + "')");
+            if (rs2.next()) this.todaysCheckOuts = rs2.getInt(1);
 
-        // 3. Available rooms
-        ResultSet rs3 = stmt.executeQuery(
-            "SELECT COUNT(*) FROM rooms WHERE status = 'Available'");
-        if (rs3.next()) this.availableRooms = rs3.getInt(1);
+            // 3. Available rooms
+            ResultSet rs3 = stmt.executeQuery(
+                "SELECT COUNT(*) FROM rooms WHERE status = 'Available'");
+            if (rs3.next()) this.availableRooms = rs3.getInt(1);
 
-        // 4. Occupancy rate
-        ResultSet rs4 = stmt.executeQuery(
-            "SELECT (COUNT(CASE WHEN status = 'Occupied' THEN 1 END) * 100.0 / COUNT(*)) FROM rooms");
-        if (rs4.next()) this.occupancyRate = rs4.getDouble(1);
+            // 4. Occupancy rate
+            ResultSet rs4 = stmt.executeQuery(
+                "SELECT (COUNT(CASE WHEN status = 'Occupied' THEN 1 END) * 100.0 / COUNT(*)) FROM rooms");
+            if (rs4.next()) this.occupancyRate = rs4.getDouble(1);
 
-        // 5. Recent reservations (with guest name and room details)
-        ResultSet rs5 = stmt.executeQuery(
-            "SELECT r.reservation_id, " +
-            "       CONCAT(g.first_name, ' ', g.last_name) AS guest_name, " +
-            "       rm.room_number, " +
-            "       rm.room_type, " +
-            "       r.reservation_status, " +
-            "       r.check_in_date " +
-            "FROM reservations r " +
-            "JOIN guests g ON r.guest_id = g.guest_id " +
-            "JOIN rooms rm ON r.room_id = rm.room_id " +
-            "ORDER BY r.reservation_id DESC LIMIT 10");
+            // 5. Recent ACTIVE reservations (only Confirmed or Checked-In)
+            //    Ordered by most recent, limit 10
+            ResultSet rs5 = stmt.executeQuery(
+                "SELECT r.reservation_id, " +
+                "       CONCAT(g.first_name, ' ', g.last_name) AS guest_name, " +
+                "       rm.room_number, " +
+                "       rm.room_type, " +
+                "       r.reservation_status, " +
+                "       r.check_in_date " +
+                "FROM reservations r " +
+                "JOIN guests g ON r.guest_id = g.guest_id " +
+                "JOIN rooms rm ON r.room_id = rm.room_id " +
+                "WHERE r.reservation_status IN ('Confirmed', 'Checked-In') " +
+                "ORDER BY r.reservation_id DESC LIMIT 10");
 
-        List<Object[]> list = new ArrayList<>();
-        while (rs5.next()) {
-            list.add(new Object[]{
-                rs5.getInt("reservation_id"),
-                rs5.getString("guest_name"),
-                rs5.getString("room_number"),
-                rs5.getString("room_type"),
-                rs5.getString("reservation_status"),
-                rs5.getDate("check_in_date")
-            });
+            List<Object[]> list = new ArrayList<>();
+            while (rs5.next()) {
+                list.add(new Object[]{
+                    rs5.getInt("reservation_id"),
+                    rs5.getString("guest_name"),
+                    rs5.getString("room_number"),
+                    rs5.getString("room_type"),
+                    rs5.getString("reservation_status"),
+                    rs5.getDate("check_in_date")
+                });
+            }
+            this.reservationData = list.toArray(new Object[0][]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Failed to load dashboard statistics.\n" + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
-        this.reservationData = list.toArray(new Object[0][]);
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this,
-            "Failed to load dashboard statistics.\n" + e.getMessage(),
-            "Database Error", JOptionPane.ERROR_MESSAGE);
     }
-}
 
+    // =============================================================
+    //  UI SETUP (unchanged – kept as you had it)
+    // =============================================================
     private void functionMenu() {
         lblReception = new JLabel ("DASHBOARD");
         lblReception.setBounds(330, 60, 800, 60);
@@ -149,7 +155,6 @@ private void loadDashboardStats() {
         btnHomePage.setBackground(Color.decode("#222222"));
         btnHomePage.setForeground(Color.WHITE);
         btnHomePage.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnHomePage.setBorderPainted(false);
         btnHomePage.setFocusPainted(false);
         btnHomePage.setBorder(null);
@@ -161,7 +166,6 @@ private void loadDashboardStats() {
         btnSideDash.setBackground(Color.decode("#FFFFFF"));
         btnSideDash.setForeground(Color.BLACK);
         btnSideDash.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnSideDash.setBorderPainted(false);
         btnSideDash.setFocusPainted(false);
         btnSideDash.setBorder(null);
@@ -173,7 +177,6 @@ private void loadDashboardStats() {
         btnSideRegister.setBackground(Color.decode("#222222"));
         btnSideRegister.setForeground(Color.WHITE);
         btnSideRegister.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnSideRegister.setBorderPainted(false);
         btnSideRegister.setFocusPainted(false);
         btnSideRegister.setBorder(null);
@@ -185,7 +188,6 @@ private void loadDashboardStats() {
         btnSideRoomBooking.setBackground(Color.decode("#222222"));
         btnSideRoomBooking.setForeground(Color.WHITE);
         btnSideRoomBooking.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnSideRoomBooking.setBorderPainted(false);
         btnSideRoomBooking.setFocusPainted(false);
         btnSideRoomBooking.setBorder(null);
@@ -197,7 +199,6 @@ private void loadDashboardStats() {
         btnSidePay.setBackground(Color.decode("#222222"));
         btnSidePay.setForeground(Color.WHITE);
         btnSidePay.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnSidePay.setBorderPainted(false);
         btnSidePay.setFocusPainted(false);
         btnSidePay.setBorder(null);
@@ -209,7 +210,6 @@ private void loadDashboardStats() {
         btnSideReserve.setBackground(Color.decode("#222222"));
         btnSideReserve.setForeground(Color.WHITE);
         btnSideReserve.setFont(new Font ("Arial Black", Font.BOLD, 18));
-        
         btnSideReserve.setBorderPainted(false);
         btnSideReserve.setFocusPainted(false);
         btnSideReserve.setBorder(null);
@@ -221,7 +221,6 @@ private void loadDashboardStats() {
         btnSideCancel.setBackground(Color.decode("#222222"));
         btnSideCancel.setForeground(Color.WHITE);
         btnSideCancel.setFont(new Font ("Arial Black", Font.BOLD, 18));
-
         btnSideCancel.setBorderPainted(false);
         btnSideCancel.setFocusPainted(false);
         btnSideCancel.setBorder(null);
@@ -330,7 +329,7 @@ private void loadDashboardStats() {
         recentPanel.setBorder(BorderFactory.createLineBorder(Color.decode("#DDDDDD")));
         dashboardPanel.add(recentPanel);
 
-        lblRecent = new JLabel("Today's Reservations");
+        lblRecent = new JLabel("Active Reservations (Recent)");
         lblRecent.setBounds(10, 5, 400, 30);
         lblRecent.setFont(new Font("Arial Black", Font.BOLD, 18));
         lblRecent.setForeground(Color.decode("#333333"));
@@ -355,7 +354,7 @@ private void loadDashboardStats() {
         scrollPane.setBounds(10, 40, 840, 240);
         recentPanel.add(scrollPane);
 
-        JLabel lblTotalLabel = new JLabel("Total Reservations:");
+        JLabel lblTotalLabel = new JLabel("Total Active:");
         lblTotalLabel.setBounds(10, 290, 150, 25);
         lblTotalLabel.setFont(new Font("Arial", Font.BOLD, 13));
         recentPanel.add(lblTotalLabel);
@@ -422,8 +421,7 @@ private void loadDashboardStats() {
             dispose();
             new CancelBookingPanel().setVisible(true);
         } else if (e.getSource() == btnRefresh) {
-            // --- FIX: Reload from database ---
-            loadDashboardStats();
+            loadDashboardStats();  // reload from DB
             refreshDisplay();
         }
     }

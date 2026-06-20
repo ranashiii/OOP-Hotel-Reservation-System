@@ -19,66 +19,47 @@ import java.util.stream.Collectors;
  */
 public class RoomService {
     private RoomDAO roomDAO = new RoomDAO();
-    private ReservationDAO reservationDAO = new ReservationDAO();   // added for availability checks
+    private ReservationDAO reservationDAO = new ReservationDAO();
 
     /**
      * Add new room to inventory
-     * 
-     * @param room the room object with details
-     * @return Room object if creation successful
-     * @throws HotelException if creation fails or validation fails
      */
     public Room addRoom(Room room) throws HotelException {
         if (room == null) {
             throw new HotelException("Room object cannot be null");
         }
-        
         if (room.getRoomNumber() == null || room.getRoomNumber().trim().isEmpty()) {
             throw new HotelException("Room number cannot be empty");
         }
-        
         if (!isValidRoomType(room.getRoomType())) {
             throw new HotelException("Invalid room type. Must be: Single Standard, Double Standard, Double Deluxe, Suite Deluxe");
         }
-        
         if (room.getFloor() < 1 || room.getFloor() > 100) {
             throw new HotelException("Floor must be between 1 and 100");
         }
-        
         if (room.getCapacity() < 1 || room.getCapacity() > 10) {
             throw new HotelException("Capacity must be between 1 and 10 guests");
         }
-        
         if (room.getPricePerNight() == null || room.getPricePerNight().compareTo(BigDecimal.ZERO) <= 0) {
             throw new HotelException("Price per night must be greater than 0");
         }
-        
         if (room.getPricePerNight().compareTo(new BigDecimal("999999.99")) > 0) {
             throw new HotelException("Price per night cannot exceed 999999.99");
         }
-        
         int roomId = roomDAO.createRoom(room);
         room.setRoomId(roomId);
         return room;
     }
-    
+
     /**
      * Get room by ID
-     * 
-     * @param roomId the room ID
-     * @return Room object if found, null otherwise
-     * @throws HotelException if query fails
      */
     public Room getRoomById(int roomId) throws HotelException {
         return roomDAO.getRoomById(roomId);
     }
-    
+
     /**
      * Get room by room number
-     * 
-     * @param roomNumber the room number
-     * @return Room object if found, null otherwise
-     * @throws HotelException if query fails
      */
     public Room getRoomByNumber(String roomNumber) throws HotelException {
         if (roomNumber == null || roomNumber.trim().isEmpty()) {
@@ -86,23 +67,16 @@ public class RoomService {
         }
         return roomDAO.getRoomByNumber(roomNumber);
     }
-    
+
     /**
      * Get all rooms
-     * 
-     * @return List of all Room objects
-     * @throws HotelException if query fails
      */
     public List<Room> getAllRooms() throws HotelException {
         return roomDAO.getAllRooms();
     }
-    
+
     /**
      * Get rooms by type
-     * 
-     * @param roomType the room type
-     * @return List of Room objects with matching type
-     * @throws HotelException if query fails
      */
     public List<Room> getRoomsByType(String roomType) throws HotelException {
         if (!isValidRoomType(roomType)) {
@@ -110,13 +84,9 @@ public class RoomService {
         }
         return roomDAO.getRoomsByType(roomType);
     }
-    
+
     /**
      * Get rooms by minimum capacity
-     * 
-     * @param capacity the minimum capacity
-     * @return List of Room objects with capacity >= specified
-     * @throws HotelException if query fails
      */
     public List<Room> getRoomsByCapacity(int capacity) throws HotelException {
         if (capacity < 1 || capacity > 10) {
@@ -124,81 +94,55 @@ public class RoomService {
         }
         return roomDAO.getRoomsByCapacity(capacity);
     }
-    
+
     /**
      * Get rooms within price range
-     * 
-     * @param minPrice minimum price
-     * @param maxPrice maximum price
-     * @return List of Room objects within price range
-     * @throws HotelException if query fails or validation fails
      */
     public List<Room> getRoomsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) throws HotelException {
         if (minPrice == null || maxPrice == null) {
             throw new HotelException("Price range cannot be null");
         }
-        
         if (minPrice.compareTo(BigDecimal.ZERO) < 0 || maxPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new HotelException("Prices cannot be negative");
         }
-        
         if (minPrice.compareTo(maxPrice) > 0) {
             throw new HotelException("Minimum price cannot be greater than maximum price");
         }
-        
         return roomDAO.getRoomsByPriceRange(minPrice, maxPrice);
     }
-    
+
     /**
      * Get available rooms (status = 'Available')
-     * 
-     * @return List of available Room objects
-     * @throws HotelException if query fails
      */
     public List<Room> getAvailableRooms() throws HotelException {
         return roomDAO.getAvailableRooms();
     }
-    
+
     /**
      * Get count of available rooms
-     * 
-     * @return number of available rooms
-     * @throws HotelException if query fails
      */
     public int getAvailableRoomsCount() throws HotelException {
         return roomDAO.getAvailableRoomsCount();
     }
-    
+
     /**
      * Update room information
-     * 
-     * @param room the room object with updated information
-     * @return true if update successful
-     * @throws HotelException if update fails or validation fails
      */
     public boolean updateRoom(Room room) throws HotelException {
         if (room == null || room.getRoomId() == 0) {
             throw new HotelException("Invalid room object");
         }
-        
         if (!isValidRoomType(room.getRoomType())) {
             throw new HotelException("Invalid room type");
         }
-        
         if (room.getCapacity() < 1 || room.getCapacity() > 10) {
             throw new HotelException("Capacity must be between 1 and 10");
         }
-        
         return roomDAO.updateRoom(room);
     }
-    
+
     /**
      * Update room status
-     * 
-     * @param roomId the room ID
-     * @param status the new status
-     * @return true if update successful
-     * @throws HotelException if update fails or validation fails
      */
     public boolean updateRoomStatus(int roomId, String status) throws HotelException {
         if (!isValidRoomStatus(status)) {
@@ -206,13 +150,9 @@ public class RoomService {
         }
         return roomDAO.updateRoomStatus(roomId, status);
     }
-    
+
     /**
      * Delete room from inventory
-     * 
-     * @param roomId the room ID
-     * @return true if deletion successful
-     * @throws HotelException if deletion fails
      */
     public boolean deleteRoom(int roomId) throws HotelException {
         Room room = roomDAO.getRoomById(roomId);
@@ -221,60 +161,39 @@ public class RoomService {
         }
         return roomDAO.deleteRoom(roomId);
     }
-    
+
     /**
      * Validate room type
-     * Valid types: Single Standard, Double Standard, Double Deluxe, Suite Deluxe
-     * 
-     * @param roomType the room type to validate
-     * @return true if valid, false otherwise
      */
     private boolean isValidRoomType(String roomType) {
-        return roomType != null && 
-               (roomType.equals("Single Standard") || 
-                roomType.equals("Double Standard") || 
-                roomType.equals("Double Deluxe") || 
+        return roomType != null &&
+               (roomType.equals("Single Standard") ||
+                roomType.equals("Double Standard") ||
+                roomType.equals("Double Deluxe") ||
                 roomType.equals("Suite Deluxe"));
     }
-    
+
     /**
      * Validate room status
-     * Valid statuses: Available, Occupied, Maintenance, Cleaning
-     * 
-     * @param status the status to validate
-     * @return true if valid, false otherwise
      */
     private boolean isValidRoomStatus(String status) {
-        return status != null && 
-               (status.equals("Available") || 
-                status.equals("Occupied") || 
-                status.equals("Maintenance") || 
+        return status != null &&
+               (status.equals("Available") ||
+                status.equals("Occupied") ||
+                status.equals("Maintenance") ||
                 status.equals("Cleaning"));
     }
 
     // =============================================================
-    //  NEW: Get available rooms by type, capacity, and date range
+    //  NEW: Availability by date (for guest search)
     // =============================================================
     /**
      * Get rooms of a specific type that are available for the given dates
      * and have capacity >= minCapacity.
-     *
-     * @param roomType    the room type (e.g., "Single Standard")
-     * @param minCapacity minimum number of guests
-     * @param checkIn     check-in date
-     * @param checkOut    check-out date
-     * @return list of rooms that satisfy all criteria
-     * @throws HotelException if database error occurs
      */
     public List<Room> getAvailableRoomsByTypeAndDate(String roomType, int minCapacity,
                                                      LocalDate checkIn, LocalDate checkOut) throws HotelException {
-        // 1. Get all rooms of the given type
         List<Room> allRooms = roomDAO.getRoomsByType(roomType);
-        if (allRooms.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 2. Filter by capacity and availability
         return allRooms.stream()
             .filter(r -> r.getCapacity() >= minCapacity)
             .filter(r -> {
@@ -285,5 +204,60 @@ public class RoomService {
                 }
             })
             .collect(Collectors.toList());
+    }
+
+    // =============================================================
+    //  ADMIN CONVENIENCE METHODS (added to fix compilation errors)
+    // =============================================================
+
+    /**
+     * Alias for getAllRooms() – used by admin panels.
+     */
+    public List<Room> findAllRooms() throws HotelException {
+        return getAllRooms();
+    }
+
+    /**
+     * Check if a room number already exists.
+     */
+    public boolean roomExists(String roomNumber) throws HotelException {
+        return getRoomByNumber(roomNumber) != null;
+    }
+
+    /**
+     * Add room using six string parameters (admin UI style).
+     */
+    public Room addRoom(String roomNumber, String roomType, String floorStr,
+                        String capacityStr, String priceStr, String status) throws HotelException {
+        Room room = new Room();
+        room.setRoomNumber(roomNumber);
+        room.setRoomType(roomType);
+        room.setFloor(Integer.parseInt(floorStr));
+        room.setCapacity(Integer.parseInt(capacityStr));
+        room.setPricePerNight(new BigDecimal(priceStr));
+        room.setStatus(status);
+        room.setAmenities("");
+        room.setRoomImage("");
+        return addRoom(room);
+    }
+
+    /**
+     * Update room using five string parameters (admin UI style).
+     * Finds the room by number and updates type, floor, capacity, price.
+     * Status is left unchanged.
+     */
+    public Room updateRoom(String roomNumber, String roomType, String floorStr,
+                           String capacityStr, String priceStr) throws HotelException {
+        Room existing = getRoomByNumber(roomNumber);
+        if (existing == null) {
+            throw new HotelException("Room not found");
+        }
+        existing.setRoomType(roomType);
+        existing.setFloor(Integer.parseInt(floorStr));
+        existing.setCapacity(Integer.parseInt(capacityStr));
+        existing.setPricePerNight(new BigDecimal(priceStr));
+        // keep status, amenities, image as they were
+        updateRoom(existing);
+        return existing;
     }
 }

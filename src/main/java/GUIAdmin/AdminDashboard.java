@@ -1,142 +1,145 @@
 package GUIAdmin;
 
-import UI.StyledButton;
-import Utilities.Logger;
+import Services.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
-public class AdminDashboard extends JFrame implements ActionListener {
-
-    // Shared services - package-visible so HomePage and the panel classes can use them
-    final RoomService roomService;
-    final UserService userService;
-    final ReservationService reservationService;
-    final PaymentService paymentService;
-
-    // Sidebar nav buttons - referenced by HomePage when deciding which panel to switch to
-    JButton btnReports;
-    JButton btnUserManagement;
-    JButton btnRoomManagement;
-    JButton btnReservations;
+public class AdminDashboard extends JFrame {
 
     private JPanel contentPanel;
-    private JLabel lblHeader;
+    private JButton btnReports, btnUserManagement, btnRoomManagement, btnReservations;
     private JPanel sidebar;
 
-    private static final Color SIDEBAR_BG = new Color(45, 85, 130);
-    private static final Color SIDEBAR_ACTIVE = new Color(30, 60, 95);
+    private RoomService roomService = new RoomService();
+    private UserService userService = new UserService();
+    private ReservationService reservationService = new ReservationService();
+    private PaymentService paymentService = new PaymentService();
 
     public AdminDashboard() {
-        this.roomService = new RoomService();
-        this.userService = new UserService();
-        this.reservationService = new ReservationService();
-        this.paymentService = new PaymentService();
-
-        initWindow();
-        createComponents();
-        Logger.getInstance().info("AdminDashboard opened");
-    }
-
-    private void initWindow() {
         setTitle("Admin Dashboard");
-        setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(1200, 700);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
-    }
+        setLayout(null);   // <-- NULL LAYOUT
+        setResizable(false);
+        getContentPane().setBackground(Color.WHITE);
 
-    private void createComponents() {
-        // Top header bar
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(SIDEBAR_BG);
+        // ---- Sidebar ----
+        sidebar = new JPanel(null);
+        sidebar.setBounds(0, 0, 220, 700);
+        sidebar.setBackground(new Color(34, 34, 34));
+        add(sidebar);
 
-        lblHeader = new JLabel("DASHBOARD");
-        lblHeader.setFont(new Font("Arial", Font.BOLD, 18));
-        lblHeader.setForeground(Color.WHITE);
-        lblHeader.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        topPanel.add(lblHeader, BorderLayout.WEST);
+        JLabel lblTitle = new JLabel("ADMIN");
+        lblTitle.setBounds(30, 20, 180, 40);
+        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 28));
+        lblTitle.setForeground(Color.WHITE);
+        sidebar.add(lblTitle);
 
-        add(topPanel, BorderLayout.NORTH);
+        JLabel lblSub = new JLabel("PANEL");
+        lblSub.setBounds(30, 60, 180, 30);
+        lblSub.setFont(new Font("Arial", Font.BOLD, 16));
+        lblSub.setForeground(new Color(200, 200, 200));
+        sidebar.add(lblSub);
 
-        // Sidebar navigation
-        sidebar = new JPanel();
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(SIDEBAR_BG);
-        sidebar.setPreferredSize(new Dimension(220, 0));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
-
-        btnReports = createNavButton("REPORTS");
-        btnUserManagement = createNavButton("USER MANAGEMENT");
-        btnRoomManagement = createNavButton("ROOM MANAGEMENT");
-        btnReservations = createNavButton("RESERVATIONS");
-
-        btnReports.addActionListener(e -> switchTo(btnReports, "REPORTS & STATISTICS",
-            new ReportsPanel(this, roomService, userService, reservationService, paymentService)));
-        btnUserManagement.addActionListener(e -> switchTo(btnUserManagement, "USER MANAGEMENT",
-            new UserManagementPanel(this, userService)));
-        btnRoomManagement.addActionListener(e -> switchTo(btnRoomManagement, "ROOM MANAGEMENT",
-            new RoomManagementPanel(this, roomService)));
-        btnReservations.addActionListener(e -> switchTo(btnReservations, "RESERVATIONS",
-            new ReservationsPanel(this, reservationService)));
+        // Navigation buttons
+        btnReports = createNavButton("REPORTS", 30, 130);
+        btnUserManagement = createNavButton("USER MANAGEMENT", 30, 200);
+        btnRoomManagement = createNavButton("ROOM MANAGEMENT", 30, 270);
+        btnReservations = createNavButton("RESERVATIONS", 30, 340);
 
         sidebar.add(btnReports);
         sidebar.add(btnUserManagement);
         sidebar.add(btnRoomManagement);
         sidebar.add(btnReservations);
-        sidebar.add(Box.createVerticalGlue());
 
-        add(sidebar, BorderLayout.WEST);
+        // Logout button at bottom
+        JButton btnLogout = new JButton("LOGOUT");
+        btnLogout.setBounds(30, 600, 160, 40);
+        btnLogout.setBackground(new Color(200, 50, 50));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setFont(new Font("Arial Black", Font.BOLD, 14));
+        btnLogout.setFocusPainted(false);
+        btnLogout.setBorderPainted(false);
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(AdminDashboard.this,
+                    "Are you sure you want to logout?", "Logout",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                HotelReservationMainSystem.SessionManager.getInstance().logout();
+                dispose();
+                // Return to login frame
+                new GUILogin.LoginFrame().setVisible(true);
+            }
+        });
+        sidebar.add(btnLogout);
 
-        // Content area - panels get swapped in here via switchTo()
-        contentPanel = new JPanel(new BorderLayout());
+        // ---- Content area ----
+        contentPanel = new JPanel(null);
+        contentPanel.setBounds(220, 0, 980, 700);
         contentPanel.setBackground(Color.WHITE);
-        add(contentPanel, BorderLayout.CENTER);
+        add(contentPanel);
 
-        // Default view on open
-        switchTo(btnReports, "REPORTS & STATISTICS",
-            new ReportsPanel(this, roomService, userService, reservationService, paymentService));
+        // ---- Button actions ----
+        btnReports.addActionListener(e -> switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel()));
+        btnUserManagement.addActionListener(e -> switchTo(btnUserManagement, "USER MANAGEMENT", new UserManagementPanel()));
+        btnRoomManagement.addActionListener(e -> switchTo(btnRoomManagement, "ROOM MANAGEMENT", new RoomManagementPanel()));
+        btnReservations.addActionListener(e -> switchTo(btnReservations, "RESERVATIONS", new ReservationsPanel()));
+
+        // Default view
+        switchTo(btnReports, "REPORTS & STATISTICS", new ReportsPanel());
     }
 
-    private JButton createNavButton(String text) {
+    private JButton createNavButton(String text, int x, int y) {
         JButton btn = new JButton(text);
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(220, 55));
-        btn.setPreferredSize(new Dimension(220, 55));
-        btn.setFont(new Font("Arial", Font.BOLD, 13));
-        btn.setBackground(SIDEBAR_BG);
+        btn.setBounds(x, y, 160, 45);
+        btn.setBackground(new Color(50, 50, 50));
         btn.setForeground(Color.WHITE);
-        btn.setBorderPainted(false);
+        btn.setFont(new Font("Arial Black", Font.BOLD, 14));
         btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(new Color(70, 70, 70));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(new Color(50, 50, 50));
+            }
+        });
         return btn;
     }
 
-    /**
-     * Swaps the visible panel in the content area, updates the header text,
-     * and highlights the active sidebar button.
-     */
-    void switchTo(JButton activeButton, String headerText, JPanel panel) {
-        lblHeader.setText(headerText);
+    private void switchTo(JButton activeButton, String title, JPanel panel) {
+        // Reset all buttons to default
+        btnReports.setBackground(new Color(50, 50, 50));
+        btnUserManagement.setBackground(new Color(50, 50, 50));
+        btnRoomManagement.setBackground(new Color(50, 50, 50));
+        btnReservations.setBackground(new Color(50, 50, 50));
+        activeButton.setBackground(new Color(100, 100, 100));
 
-        for (Component c : sidebar.getComponents()) {
-            if (c instanceof JButton) {
-                c.setBackground(SIDEBAR_BG);
-            }
-        }
-        if (activeButton != null) {
-            activeButton.setBackground(SIDEBAR_ACTIVE);
-        }
-
+        // Clear content panel and add new panel
         contentPanel.removeAll();
-        contentPanel.add(panel, BorderLayout.CENTER);
+        // Set the panel's bounds to fill content area
+        panel.setBounds(0, 0, 980, 700);
+        // Add a title label on top of the panel (optional, but we can keep a border)
+        // We'll wrap the panel in a titled border for clarity
+        JPanel wrapper = new JPanel(null);
+        wrapper.setBounds(0, 0, 980, 700);
+        wrapper.setBackground(Color.WHITE);
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setBounds(20, 10, 400, 30);
+        lblTitle.setFont(new Font("Arial Black", Font.BOLD, 22));
+        lblTitle.setForeground(new Color(50, 50, 50));
+        wrapper.add(lblTitle);
+        // Place the actual panel below the title
+        panel.setBounds(10, 50, 960, 630);
+        wrapper.add(panel);
+        contentPanel.add(wrapper);
         contentPanel.revalidate();
         contentPanel.repaint();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
     }
 }
