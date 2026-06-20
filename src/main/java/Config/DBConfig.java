@@ -11,7 +11,7 @@ import java.sql.SQLException;
  */
 public class DBConfig {
     
-    private static Connection connection;
+    // No static connection field – each call returns a new connection
     
     public static void initializeDriver() throws HotelException {
         try {
@@ -23,33 +23,25 @@ public class DBConfig {
     
     public static Connection getConnection() throws HotelException {
         try {
-            if (connection == null || connection.isClosed()) {
-                connection = DriverManager.getConnection(
-                    Constants.DB_URL,
-                    Constants.DB_USER,
-                    Constants.DB_PASSWORD
-                );
-            }
-            return connection;
+            return DriverManager.getConnection(
+                Constants.DB_URL,
+                Constants.DB_USER,
+                Constants.DB_PASSWORD
+            );
         } catch (SQLException e) {
             throw new HotelException("Database connection failed: " + e.getMessage(), e);
         }
     }
     
+    // No static connection to close – this method is kept for compatibility,
+    // but it does nothing now. You can remove it if you prefer.
     public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                connection = null;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error closing connection: " + e.getMessage());
-        }
+        // Nothing to close – each caller should close its own connection
+        System.out.println("DBConfig.closeConnection() called – no static connection to close.");
     }
     
     public static boolean testConnection() {
-        try {
-            Connection testConn = getConnection();
+        try (Connection testConn = getConnection()) {
             return testConn != null && !testConn.isClosed();
         } catch (Exception e) {
             System.err.println("Connection test failed: " + e.getMessage());

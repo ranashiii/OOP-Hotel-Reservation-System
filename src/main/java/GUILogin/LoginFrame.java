@@ -3,10 +3,13 @@ package GUILogin;
 import HotelReservationMainSystem.SessionManager;
 import Config.AppConfig;
 import Models.User;
+import Models.Guest;                      // added
 import Services.UserService;
+import Services.GuestService;             // added
 import Utilities.HotelException;
 import Utilities.ValidationUtil;
 import GUIReceptionist.HomePage;
+import GUIGuest.GuestDashboard;           // added
 
 import javax.swing.*;
 import java.awt.*;
@@ -205,8 +208,23 @@ public class LoginFrame extends JFrame implements ActionListener {
             User user = userService.login(username, password);
             
             if (user != null && user.isActive()) {
-                // Login successful - store session
-                SessionManager.getInstance().initializeSession(user);
+                // --- FIX: Initialize session using the new login() method ---
+                // 1. Get guest ID if the user is a guest
+                int guestId = 0;
+                if ("Guest".equalsIgnoreCase(user.getAccessLevel())) {
+                    GuestService guestService = new GuestService();
+                    Guest guest = guestService.getGuestByUserId(user.getUserId());
+                    if (guest != null) {
+                        guestId = guest.getGuestId();
+                    }
+                }
+                // 2. Call the new login method
+                SessionManager.getInstance().login(
+                    user.getUserId(),
+                    guestId,
+                    user.getUsername(),
+                    user.getAccessLevel()
+                );
                 
                 // Close login frame
                 this.dispose();
@@ -255,7 +273,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         } else if ("Receptionist".equalsIgnoreCase(accessLevel)) {
             new GUIReceptionist.HomePage().setVisible(true);
         } else if ("Guest".equalsIgnoreCase(accessLevel)) {
-            new GUIGuest.GuestDashboard().setVisible(true);
+            new GuestDashboard().setVisible(true);      // using imported GuestDashboard
         }
     }
     

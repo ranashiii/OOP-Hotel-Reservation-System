@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import HotelReservationMainSystem.SessionManager;   // added for session
+import GUILogin.LoginFrame;                         // added for logout
+
 /**
  * GuestDashboard - Main guest menu screen.
  * Entry point after login. Contains sidebar navigation to all guest screens.
@@ -74,10 +77,9 @@ public class GuestDashboard extends JFrame implements ActionListener {
         topPan.setBackground(Color.WHITE);
         add(topPan);
 
-        // TODO: DB CONNECT [WELCOME MESSAGE] - SessionManager.getCurrentUsername()
-        // Replace "GUEST DASHBOARD" with "Welcome, <username>!"
-        // Example: lblWelcome.setText("Welcome, " + SessionManager.getCurrentUsername() + "!");
-        lblWelcome = new JLabel("GUEST DASHBOARD");
+        // --- FIX: Show welcome message with logged-in username ---
+        String username = SessionManager.getInstance().getCurrentUsername();
+        lblWelcome = new JLabel("Welcome, " + (username != null ? username : "Guest") + "!");
         lblWelcome.setBounds(20, 45, 800, 70);
         lblWelcome.setFont(new Font("Arial Black", Font.BOLD, 50));
         topPan.add(lblWelcome);
@@ -158,10 +160,10 @@ public class GuestDashboard extends JFrame implements ActionListener {
                 "Are you sure you want to logout?", "Logout",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (confirm == JOptionPane.YES_OPTION) {
-                // TODO: DB CONNECT [LOGOUT] - SessionManager.clearSession()
-                // SessionManager.clearSession();
-                // new LoginFrame().setVisible(true);
-                this.dispose();
+                // --- FIX: Clear session and go to login ---
+                SessionManager.getInstance().logout();
+                dispose();
+                new LoginFrame().setVisible(true);
             }
         }
     }

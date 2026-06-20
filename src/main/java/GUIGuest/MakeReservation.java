@@ -1,15 +1,30 @@
 package GUIGuest;
 
+import Models.Payment;
+import Models.Reservation;
+import Models.Room;
+import Services.PaymentService;
+import Services.ReservationService;
+import Services.RoomService;
+import Utilities.HotelException;
+import HotelReservationMainSystem.SessionManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.time.*;
-import java.time.format.*;
-import java.time.temporal.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;   // <-- ADDED
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.UUID;
 
 public class MakeReservation extends JFrame implements ActionListener {
 
-    //labels
+    // ========== UI COMPONENTS ==========
     private JLabel lblHeader;
     private JLabel secRoom;
     private JLabel lblType;
@@ -29,7 +44,6 @@ public class MakeReservation extends JFrame implements ActionListener {
     private JLabel lblCashAmount;
     private JLabel lblReceiptTitle;
 
-    //fields
     private JTextField txtPax;
     private JTextField txtIn;
     private JTextField txtOut;
@@ -41,33 +55,26 @@ public class MakeReservation extends JFrame implements ActionListener {
     private JTextField txtOtp;
     private JTextField txtCashAmount;
 
-    //txtarea
     private JTextArea txtReceipt;
 
-    //cbboxes
     private JComboBox<String> cbRoomType;
     private JComboBox<String> cbPayment;
 
-    //buttons
     private JButton btnCalculate;
     private JButton btnBook;
     private JButton btnCloseReceipt;
 
-    //scrollpane
     private JScrollPane scrollPane;
     private JScrollBar vBar;
 
-    //seperators
     private JSeparator sep;
 
-    //panels
     private JPanel titleBar;
     private JPanel formContent;
     private JPanel formCard;
     private JPanel payDetailsPanel;
     private JPanel receiptOverlay;
 
-    //ratepax
     private double selectedRate = 0.0;
     private int maxPax = 0;
     private long numberOfNights = 0;
@@ -75,11 +82,9 @@ public class MakeReservation extends JFrame implements ActionListener {
     private double changeAmount = 0.0;
     private double cashReceived = 0.0;
 
-    // room service quantities
-    private int[] svcQty = new int[8]; // 0=Breakfast,1=Lunch,2=Dinner,3=Snacks,4=Cleaning,5=Pillow,6=Blanket,7=Mattress
+    private int[] svcQty = new int[8];
     private JLabel[] svcQtyLabels = new JLabel[8];
 
-    // room service prices per night
     private static final double SVC_BREAKFAST = 250;
     private static final double SVC_LUNCH     = 350;
     private static final double SVC_DINNER    = 450;
@@ -89,10 +94,11 @@ public class MakeReservation extends JFrame implements ActionListener {
     private static final double SVC_BLANKET   = 100;
     private static final double SVC_MATTRESS  = 300;
 
+    // Hardcoded rates (used only if DB fails)
     private static final double[] RATES = {0, 3500, 5000, 7500, 12000};
     private static final int[]    PAXES = {0,    1,    2,    3,    4};
 
-    MakeReservation() {
+    public MakeReservation() {
         setTitle("Hotel Guest System - Make Reservation");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -123,18 +129,16 @@ public class MakeReservation extends JFrame implements ActionListener {
         sidebar.add(makeSideBtn("View Reservations",  300, "Make Reservation", this, () -> openFrame(new ViewReservations())));
         sidebar.add(makeSideBtn("Cancel Reservation", 370, "Make Reservation", this, () -> openFrame(new CancelReservation())));
         sidebar.add(makeSideBtn("Guest Profile",      440, "Make Reservation", this, () -> openFrame(new GuestProfile())));
-        sidebar.add(makeSideBtn("Logout",             610, "Make Reservation", this, () -> {{
-            int c = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-            if (c == JOptionPane.YES_OPTION) {{
-                // TODO: DB CONNECT [LOGOUT] - SessionManager.clearSession()
-                // SessionManager.clearSession();
-                // new LoginFrame().setVisible(true);
+        sidebar.add(makeSideBtn("Logout",             610, "Make Reservation", this, () -> {
+            int c = JOptionPane.showConfirmDialog(MakeReservation.this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) {
+                SessionManager.getInstance().logout();
                 dispose();
-            }}
-        }}));
+                // new GUILogin.LoginFrame().setVisible(true);
+            }
+        }));
 
-        setBackground(Color.decode("#F5F5F5"));
-
+        // Content area
         JPanel contentArea = new JPanel(null);
         contentArea.setBounds(250, 0, 950, 700);
         contentArea.setBackground(Color.decode("#F5F5F5"));
@@ -257,7 +261,7 @@ public class MakeReservation extends JFrame implements ActionListener {
         lblSvcNote.setForeground(Color.GRAY);
         formCard.add(lblSvcNote);
 
-        // --- Food & Beverages ---
+        // Food & Beverages
         JLabel lblFoodBev = new JLabel("Food & Beverages:");
         lblFoodBev.setBounds(20, 338, 200, 18);
         lblFoodBev.setFont(new Font("Arial Black", Font.BOLD, 11));
@@ -268,7 +272,7 @@ public class MakeReservation extends JFrame implements ActionListener {
         addServiceRow(formCard, "Dinner",          "+PHP 450/night", 20, 420, 2);
         addServiceRow(formCard, "Snacks / Mini-bar","+PHP 150/night", 20, 450, 3);
 
-        // --- Cleaning Services ---
+        // Cleaning
         JLabel lblCleaning = new JLabel("Cleaning Services:");
         lblCleaning.setBounds(20, 482, 200, 18);
         lblCleaning.setFont(new Font("Arial Black", Font.BOLD, 11));
@@ -276,7 +280,7 @@ public class MakeReservation extends JFrame implements ActionListener {
 
         addServiceRow(formCard, "Room Cleaning", "+PHP 200/night", 20, 504, 4);
 
-        // --- Extra Amenities ---
+        // Extras
         JLabel lblExtras = new JLabel("Extra Amenities:");
         lblExtras.setBounds(20, 536, 200, 18);
         lblExtras.setFont(new Font("Arial Black", Font.BOLD, 11));
@@ -470,6 +474,7 @@ public class MakeReservation extends JFrame implements ActionListener {
         btnCloseReceipt.addActionListener(this);
     }
 
+    // ========== VALIDATION HELPERS ==========
     private int validateRoomAndPax() {
         int selection = cbRoomType.getSelectedIndex();
         if (selection == 0) {
@@ -505,362 +510,6 @@ public class MakeReservation extends JFrame implements ActionListener {
         return inputPax;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-        if (e.getSource() == cbPayment) {
-            String method    = cbPayment.getSelectedItem().toString();
-            boolean isCard   = method.equals("Credit Card");
-            boolean isWallet = method.equals("E-Wallet");
-            boolean isCash   = method.equals("Cash");
-
-            lblCardNumber.setVisible(isCard);    txtCardNumber.setVisible(isCard);
-            lblCardHolder.setVisible(isCard);    txtCardHolder.setVisible(isCard);
-            lblExpiry.setVisible(isCard);        txtExpiry.setVisible(isCard);
-            lblCvv.setVisible(isCard);           txtCvv.setVisible(isCard);
-            lblWalletPhone.setVisible(isWallet); txtWalletPhone.setVisible(isWallet);
-            lblOtp.setVisible(isWallet);         txtOtp.setVisible(isWallet);
-            lblCashAmount.setVisible(isCash);    txtCashAmount.setVisible(isCash);
-
-            payDetailsPanel.setVisible(isCard || isWallet || isCash);
-            formCard.revalidate();
-            formCard.repaint();
-        }
-
-        if (e.getSource() == btnCalculate) {
-            int selection = cbRoomType.getSelectedIndex();
-            if (selection == 0) {
-                showError("Please select a room type.");
-                return;
-            }
-
-            //validation of pax before calculation
-            int inputPax = validateRoomAndPax();
-            if (inputPax == -1) return;
-
-            selectedRate = RATES[selection];
-            maxPax       = PAXES[selection];
-
-            // TODO: DB CONNECT [GET ROOM RATE] - RoomDAO.getRateByType(roomType)
-            // TABLE: rooms
-            // Query: SELECT price_per_night FROM rooms WHERE room_type = ? AND status = 'Available' LIMIT 1
-            // Replace hardcoded RATES[] array with live DB prices
-            // selectedRate = RoomDAO.getRateByType(cbRoomType.getSelectedItem().toString());
-
-            LocalDate checkIn = parseDate(txtIn.getText().trim(), "check-in");
-            if (checkIn == null) return;
-
-            LocalDate checkOut = parseDate(txtOut.getText().trim(), "check-out");
-            if (checkOut == null) return;
-
-            if (checkIn.isBefore(LocalDate.now())) {
-                showError("Check-in date cannot be in the past.");
-                return;
-            }
-            if (!checkOut.isAfter(checkIn)) {
-                showError("Check-out date must be after check-in date.");
-                return;
-            }
-
-            numberOfNights = ChronoUnit.DAYS.between(checkIn, checkOut);
-            if (numberOfNights < 1) {
-                showError("Minimum stay is 1 night.");
-                return;
-            }
-            if (numberOfNights > 365) {
-                showError("Maximum stay is 365 nights.");
-                return;
-            }
-
-            double subtotal = selectedRate * numberOfNights;
-            double tax      = subtotal * 0.12;
-
-            // room service costs (qty * price per night * nights)
-            double serviceCost = 0;
-            double[] svcPrices = {SVC_BREAKFAST, SVC_LUNCH, SVC_DINNER, SVC_SNACKS, SVC_CLEANING, SVC_PILLOW, SVC_BLANKET, SVC_MATTRESS};
-            for (int i = 0; i < svcQty.length; i++) {
-                serviceCost += svcQty[i] * svcPrices[i] * numberOfNights;
-            }
-
-            finalTotal = subtotal + tax + serviceCost;
-
-            lblNights.setText("Nights: " + numberOfNights);
-            String totalText = String.format("Subtotal: PHP %,.2f | Tax(12%%): PHP %,.2f", subtotal, tax);
-            if (serviceCost > 0) totalText += String.format(" | Services: PHP %,.2f", serviceCost);
-            totalText += String.format(" | Total: PHP %,.2f", finalTotal);
-            lblTotalDisplay.setText(totalText);
-        }
-
-        if (e.getSource() == btnBook) {
-            //re-validate room and pax at booking time
-            int inputPax = validateRoomAndPax();
-            if (inputPax == -1) return;
-
-            if (txtIn.getText().trim().isEmpty() || txtOut.getText().trim().isEmpty()) {
-                showError("Please enter check-in and check-out dates.");
-                return;
-            }
-            if (finalTotal == 0) {
-                showError("Please calculate the price first.");
-                return;
-            }
-            if (cbPayment.getSelectedIndex() == 0) {
-                showError("Please select a payment method.");
-                return;
-            }
-            if (finalTotal > 999999.99) {
-                showError("Total exceeds maximum allowed amount of PHP 999,999.99.");
-                return;
-            }
-
-            String payMethod = cbPayment.getSelectedItem().toString();
-
-            if (payMethod.equals("Credit Card")) {
-                String cardNum    = txtCardNumber.getText().trim();
-                String cardHolder = txtCardHolder.getText().trim();
-                String expiry     = txtExpiry.getText().trim();
-                String cvv        = txtCvv.getText().trim();
-
-                if (cardNum.isEmpty()) {
-                    showError("Card number cannot be empty.");
-                    return;
-                }
-                if (cardNum.length() < 13 || cardNum.length() > 19) {
-                    showError("Card number must be 13-19 digits.");
-                    return;
-                }
-                boolean allDigits = true;
-                for (int i = 0; i < cardNum.length(); i++) {
-                    if (!Character.isDigit(cardNum.charAt(i))) {
-                        allDigits = false;
-                        break;
-                    }
-                }
-                if (!allDigits) {
-                    showError("Card number must contain digits only.");
-                    return;
-                }
-                if (!passesLuhn(cardNum)) {
-                    showError("Invalid card number (failed Luhn check).");
-                    return;
-                }
-                if (cardHolder.isEmpty()) {
-                    showError("Card holder name cannot be empty.");
-                    return;
-                }
-                boolean validHolder = true;
-                for (int i = 0; i < cardHolder.length(); i++) {
-                    char c = cardHolder.charAt(i);
-                    if (!Character.isLetter(c) && c != ' ') {
-                        validHolder = false;
-                        break;
-                    }
-                }
-                if (!validHolder) {
-                    showError("Card holder name must contain letters and spaces only.");
-                    return;
-                }
-                if (expiry.isEmpty()) {
-                    showError("Expiry date cannot be empty.");
-                    return;
-                }
-                if (expiry.length() < 4 || !expiry.contains("/")) {
-                    showError("Expiry must be MM/YY format.");
-                    return;
-                }
-                if (isCardExpired(expiry)) {
-                    showError("This card has expired.");
-                    return;
-                }
-                if (cvv.isEmpty() || cvv.length() < 3 || cvv.length() > 4) {
-                    showError("CVV must be 3 or 4 digits.");
-                    return;
-                }
-                boolean validCvv = true;
-                for (int i = 0; i < cvv.length(); i++) {
-                    if (!Character.isDigit(cvv.charAt(i))) {
-                        validCvv = false;
-                        break;
-                    }
-                }
-                if (!validCvv) {
-                    showError("CVV must contain digits only.");
-                    return;
-                }
-            }
-
-            if (payMethod.equals("E-Wallet")) {
-                String walletPhone = txtWalletPhone.getText().trim();
-                String otp         = txtOtp.getText().trim();
-
-                if (walletPhone.isEmpty()) {
-                    showError("E-Wallet phone number cannot be empty.");
-                    return;
-                }
-                if (walletPhone.length() != 11 && walletPhone.length() != 13) {
-                    showError("Phone must be 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 chars).");
-                    return;
-                }
-                if (walletPhone.length() == 11 && !walletPhone.startsWith("09")) {
-                    showError("Phone must start with 09 for local format.");
-                    return;
-                }
-                if (walletPhone.length() == 13 && !walletPhone.startsWith("+639")) {
-                    showError("Phone must start with +639 for international format.");
-                    return;
-                }
-                if (otp.isEmpty()) {
-                    showError("OTP cannot be empty.");
-                    return;
-                }
-                if (otp.length() != 6) {
-                    showError("OTP must be exactly 6 digits.");
-                    return;
-                }
-                boolean validOtp = true;
-                for (int i = 0; i < otp.length(); i++) {
-                    if (!Character.isDigit(otp.charAt(i))) {
-                        validOtp = false;
-                        break;
-                    }
-                }
-                if (!validOtp) {
-                    showError("OTP must contain digits only.");
-                    return;
-                }
-            }
-
-            if (payMethod.equals("Cash")) {
-                String cashText = txtCashAmount.getText().trim();
-                if (cashText.isEmpty()) {
-                    showError("Please enter the cash amount.");
-                    return;
-                }
-                double cashAmount;
-                try {
-                    cashAmount = Double.parseDouble(cashText);
-                } catch (NumberFormatException ex) {
-                    showError("Please enter a valid cash amount.");
-                    return;
-                }
-                if (cashAmount < finalTotal) {
-                    showError("Insufficient cash. Amount must be at least PHP " + String.format("%,.2f", finalTotal) + ".");
-                    return;
-                }
-                changeAmount = cashAmount - finalTotal;
-                cashReceived = cashAmount;
-            } else {
-                changeAmount = 0.0;
-            }
-
-            double subtotal = selectedRate * numberOfNights;
-
-            // recalculate service cost for receipt
-            // TODO: DB CONNECT [SAVE ROOM SERVICES] - RoomServiceDAO.saveServices(reservationId, services)
-            // ---------------------------------------------------------------
-            // PURPOSE: Save each ordered room service item to the database
-            // TABLE:   room_services (your groupmate needs to CREATE this table)
-            //
-            // SUGGESTED TABLE SCHEMA:
-            //   CREATE TABLE room_services (
-            //       service_id       INT PRIMARY KEY AUTO_INCREMENT,
-            //       reservation_id   INT NOT NULL,
-            //       service_name     VARCHAR(50) NOT NULL,   ← e.g. "Breakfast"
-            //       quantity         INT NOT NULL,           ← from svcQty[i]
-            //       price_per_night  DECIMAL(10,2) NOT NULL, ← e.g. 250.00
-            //       total_cost       DECIMAL(10,2) NOT NULL, ← qty * price * nights
-            //       created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
-            //       FOREIGN KEY (reservation_id) REFERENCES reservations(reservation_id)
-            //   );
-            //
-            // AFTER inserting into reservations (Step 2 in the block below),
-            // loop through svcQty[] and insert each service where qty > 0:
-            //
-            //   String[] svcNames   = {"Breakfast","Lunch","Dinner","Snacks","Cleaning","Pillow","Blanket","Mattress"};
-            //   double[] svcPricesX = {250, 350, 450, 150, 200, 100, 100, 300};
-            //   for (int i = 0; i < svcQty.length; i++) {
-            //       if (svcQty[i] > 0) {
-            //           double totalCost = svcQty[i] * svcPricesX[i] * numberOfNights;
-            //           INSERT INTO room_services
-            //               (reservation_id, service_name, quantity, price_per_night, total_cost)
-            //           VALUES (newReservationId, svcNames[i], svcQty[i], svcPricesX[i], totalCost);
-            //       }
-            //   }
-            // ---------------------------------------------------------------
-            double serviceCostReceipt = 0;
-            StringBuilder serviceLines = new StringBuilder();
-            String[] svcNames  = {"Breakfast","Lunch","Dinner","Snacks","Cleaning","Pillow","Blanket","Mattress"};
-            double[] svcPricesR = {SVC_BREAKFAST, SVC_LUNCH, SVC_DINNER, SVC_SNACKS, SVC_CLEANING, SVC_PILLOW, SVC_BLANKET, SVC_MATTRESS};
-            for (int i = 0; i < svcQty.length; i++) {
-                if (svcQty[i] > 0) {
-                    double c = svcQty[i] * svcPricesR[i] * numberOfNights;
-                    serviceCostReceipt += c;
-                    serviceLines.append(String.format("  %-10s x%d: PHP %,.2f%n", svcNames[i], svcQty[i], c));
-                }
-            }
-
-            // TODO: DB CONNECT [SAVE RESERVATION + PAYMENT] - ReservationDAO.createReservation(...)
-            // Run these DB operations BEFORE showing the receipt:
-            //
-            // STEP 1 - Get available room_id for selected type:
-            //   TABLE: rooms
-            //   Query: SELECT room_id FROM rooms WHERE room_type = ? AND status = 'Available'
-            //          AND room_id NOT IN (
-            //              SELECT room_id FROM reservations
-            //              WHERE check_in_date < ? AND check_out_date > ?
-            //              AND reservation_status != 'Cancelled')
-            //          LIMIT 1
-            //   Parameters: cbRoomType.getSelectedItem(), checkOut, checkIn
-            //   If no room found: showError("No available room for selected dates."); return;
-            //
-            // STEP 2 - INSERT into TABLE: reservations
-            //   Columns: guest_id, room_id, check_in_date, check_out_date,
-            //            number_of_guests, number_of_nights, room_rate,
-            //            total_price, final_total, reservation_date, reservation_status
-            //   Values: SessionManager.getCurrentGuestId(), roomId,
-            //           checkIn, checkOut, txtPax.getText(), numberOfNights,
-            //           selectedRate, subtotal, finalTotal, LocalDate.now(), 'Confirmed'
-            //
-            // STEP 3 - INSERT into TABLE: payments
-            //   Columns: reservation_id, payment_amount, payment_method,
-            //            payment_type_details, payment_status, payment_date, payment_time
-            //   Values: newReservationId, finalTotal, payMethod,
-            //           (card number last 4 digits / wallet phone), 'Completed',
-            //           LocalDate.now(), LocalTime.now()
-            //
-            // On DB error: showError("Booking failed. Please try again."); return;
-
-            receiptOverlay.setVisible(true);
-            txtReceipt.setText(
-                "    --- HOTEL RESERVATION RECEIPT ---\n\n" +
-                "Room:      " + cbRoomType.getSelectedItem() + "\n" +
-                "Guests:    " + txtPax.getText() + "\n" +
-                "Check-in:  " + txtIn.getText() + "\n" +
-                "Check-out: " + txtOut.getText() + "\n" +
-                "Nights:    " + numberOfNights + "\n" +
-                "---------------------------------\n" +
-                String.format("Subtotal:  PHP %,.2f%n", subtotal) +
-                String.format("Tax (12%%): PHP %,.2f%n", subtotal * 0.12) +
-                (serviceCostReceipt > 0 ? "----- Room Services -----\n" + serviceLines.toString() + String.format("Services:  PHP %,.2f%n", serviceCostReceipt) : "") +
-                String.format("TOTAL:     PHP %,.2f%n", finalTotal) +
-                "---------------------------------\n" +
-                "Method:    " + payMethod + "\n" +
-                (payMethod.equals("Cash") ? String.format("Cash:      PHP %,.2f%n", cashReceived) : "") +
-                (payMethod.equals("Cash") ? String.format("Change:    PHP %,.2f%n", changeAmount) : "") +
-                "---------------------------------\n" +
-                "STATUS:    SUCCESSFUL"
-            );
-        }
-
-        if (e.getSource() == btnCloseReceipt) {
-            receiptOverlay.setVisible(false);
-        }
-    }
-
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, "Error: " + msg, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
     private LocalDate parseDate(String text, String label) {
         if (text.isEmpty()) {
             showError("Please enter a " + label + " date.");
@@ -882,9 +531,7 @@ public class MakeReservation extends JFrame implements ActionListener {
             int n = Character.getNumericValue(number.charAt(i));
             if (alt) {
                 n *= 2;
-                if (n > 9) {
-                    n -= 9;
-                }
+                if (n > 9) n -= 9;
             }
             sum += n;
             alt = !alt;
@@ -904,10 +551,11 @@ public class MakeReservation extends JFrame implements ActionListener {
         }
     }
 
-    private JSpinner createSpinner() {
-        return new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, "Error: " + msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    // ========== ROOM SERVICE UI HELPERS ==========
     private void addServiceRow(JPanel panel, String name, String price, int x, int y, int index) {
         JLabel lbl = new JLabel(name);
         lbl.setBounds(x + 10, y + 2, 160, 20);
@@ -961,6 +609,7 @@ public class MakeReservation extends JFrame implements ActionListener {
         });
     }
 
+    // ========== SIDEBAR HELPERS ==========
     private JButton makeSideBtn(String text, int y, String active, JFrame frame, Runnable action) {
         JButton btn = new JButton(text);
         btn.setBounds(0, y, 250, 50);
@@ -989,4 +638,310 @@ public class MakeReservation extends JFrame implements ActionListener {
         dispose();
     }
 
+    // ============================================================
+    // ========== MAIN ACTION LISTENER (UPDATED) ==========
+    // ============================================================
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // ---- Payment method visibility ----
+        if (e.getSource() == cbPayment) {
+            String method = cbPayment.getSelectedItem().toString();
+            boolean isCard   = method.equals("Credit Card");
+            boolean isWallet = method.equals("E-Wallet");
+            boolean isCash   = method.equals("Cash");
+
+            lblCardNumber.setVisible(isCard);    txtCardNumber.setVisible(isCard);
+            lblCardHolder.setVisible(isCard);    txtCardHolder.setVisible(isCard);
+            lblExpiry.setVisible(isCard);        txtExpiry.setVisible(isCard);
+            lblCvv.setVisible(isCard);           txtCvv.setVisible(isCard);
+            lblWalletPhone.setVisible(isWallet); txtWalletPhone.setVisible(isWallet);
+            lblOtp.setVisible(isWallet);         txtOtp.setVisible(isWallet);
+            lblCashAmount.setVisible(isCash);    txtCashAmount.setVisible(isCash);
+
+            payDetailsPanel.setVisible(isCard || isWallet || isCash);
+            formCard.revalidate();
+            formCard.repaint();
+            return;
+        }
+
+        // ---- Calculate ----
+        if (e.getSource() == btnCalculate) {
+            int selection = cbRoomType.getSelectedIndex();
+            if (selection == 0) {
+                showError("Please select a room type.");
+                return;
+            }
+
+            int inputPax = validateRoomAndPax();
+            if (inputPax == -1) return;
+
+            selectedRate = RATES[selection];
+            maxPax = PAXES[selection];
+
+            LocalDate checkIn = parseDate(txtIn.getText().trim(), "check-in");
+            if (checkIn == null) return;
+            LocalDate checkOut = parseDate(txtOut.getText().trim(), "check-out");
+            if (checkOut == null) return;
+
+            if (checkIn.isBefore(LocalDate.now())) {
+                showError("Check-in date cannot be in the past.");
+                return;
+            }
+            if (!checkOut.isAfter(checkIn)) {
+                showError("Check-out date must be after check-in date.");
+                return;
+            }
+
+            numberOfNights = ChronoUnit.DAYS.between(checkIn, checkOut);
+            if (numberOfNights < 1 || numberOfNights > 365) {
+                showError("Stay must be between 1 and 365 nights.");
+                return;
+            }
+
+            double subtotal = selectedRate * numberOfNights;
+            double tax = subtotal * 0.12;
+
+            double serviceCost = 0;
+            double[] svcPrices = {SVC_BREAKFAST, SVC_LUNCH, SVC_DINNER, SVC_SNACKS, SVC_CLEANING, SVC_PILLOW, SVC_BLANKET, SVC_MATTRESS};
+            for (int i = 0; i < svcQty.length; i++) {
+                serviceCost += svcQty[i] * svcPrices[i] * numberOfNights;
+            }
+
+            finalTotal = subtotal + tax + serviceCost;
+
+            lblNights.setText("Nights: " + numberOfNights);
+            String totalText = String.format("Subtotal: PHP %,.2f | Tax(12%%): PHP %,.2f", subtotal, tax);
+            if (serviceCost > 0) totalText += String.format(" | Services: PHP %,.2f", serviceCost);
+            totalText += String.format(" | Total: PHP %,.2f", finalTotal);
+            lblTotalDisplay.setText(totalText);
+            return;
+        }
+
+        // ---- Book / Confirm ----
+        if (e.getSource() == btnBook) {
+            // 1. Validate basic inputs
+            int inputPax = validateRoomAndPax();
+            if (inputPax == -1) return;
+
+            if (txtIn.getText().trim().isEmpty() || txtOut.getText().trim().isEmpty()) {
+                showError("Please enter check-in and check-out dates.");
+                return;
+            }
+            LocalDate checkIn = parseDate(txtIn.getText().trim(), "check-in");
+            if (checkIn == null) return;
+            LocalDate checkOut = parseDate(txtOut.getText().trim(), "check-out");
+            if (checkOut == null) return;
+            if (!checkOut.isAfter(checkIn)) {
+                showError("Check-out must be after check-in.");
+                return;
+            }
+            if (checkIn.isBefore(LocalDate.now())) {
+                showError("Check-in cannot be in the past.");
+                return;
+            }
+            numberOfNights = ChronoUnit.DAYS.between(checkIn, checkOut);
+            if (numberOfNights < 1 || numberOfNights > 365) {
+                showError("Stay must be between 1 and 365 nights.");
+                return;
+            }
+            if (finalTotal == 0) {
+                showError("Please calculate the price first.");
+                return;
+            }
+            if (finalTotal > 999999.99) {
+                showError("Total exceeds PHP 999,999.99.");
+                return;
+            }
+            if (cbPayment.getSelectedIndex() == 0) {
+                showError("Please select a payment method.");
+                return;
+            }
+            String payMethod = cbPayment.getSelectedItem().toString();
+
+            // 2. Payment method validation (keep your existing checks)
+            if (payMethod.equals("Credit Card")) {
+                String cardNum = txtCardNumber.getText().trim();
+                if (cardNum.isEmpty() || cardNum.length() < 13 || cardNum.length() > 19 || !cardNum.matches("\\d+")) {
+                    showError("Card number must be 13-19 digits.");
+                    return;
+                }
+                if (!passesLuhn(cardNum)) {
+                    showError("Invalid card number (failed Luhn check).");
+                    return;
+                }
+                String holder = txtCardHolder.getText().trim();
+                if (holder.isEmpty() || !holder.matches("[a-zA-Z ]+")) {
+                    showError("Card holder name must contain letters and spaces only.");
+                    return;
+                }
+                String expiry = txtExpiry.getText().trim();
+                if (expiry.isEmpty() || expiry.length() < 4 || !expiry.contains("/") || isCardExpired(expiry)) {
+                    showError("Invalid or expired expiry date (MM/YY).");
+                    return;
+                }
+                String cvv = txtCvv.getText().trim();
+                if (cvv.isEmpty() || cvv.length() < 3 || cvv.length() > 4 || !cvv.matches("\\d+")) {
+                    showError("CVV must be 3 or 4 digits.");
+                    return;
+                }
+            }
+
+            if (payMethod.equals("E-Wallet")) {
+                String phone = txtWalletPhone.getText().trim();
+                if (!phone.matches("09\\d{9}") && !phone.matches("\\+639\\d{9}")) {
+                    showError("Phone must be 09XXXXXXXXX or +639XXXXXXXXX.");
+                    return;
+                }
+                String otp = txtOtp.getText().trim();
+                if (!otp.matches("\\d{6}")) {
+                    showError("OTP must be exactly 6 digits.");
+                    return;
+                }
+            }
+
+            if (payMethod.equals("Cash")) {
+                String cashText = txtCashAmount.getText().trim();
+                if (cashText.isEmpty()) {
+                    showError("Please enter cash amount.");
+                    return;
+                }
+                try {
+                    double cash = Double.parseDouble(cashText);
+                    if (cash < finalTotal) {
+                        showError("Insufficient cash. Need PHP " + String.format("%,.2f", finalTotal));
+                        return;
+                    }
+                    cashReceived = cash;
+                    changeAmount = cash - finalTotal;
+                } catch (NumberFormatException ex) {
+                    showError("Invalid cash amount.");
+                    return;
+                }
+            }
+
+            // 3. Get an available room for the selected type and dates
+            int selection = cbRoomType.getSelectedIndex();
+            String roomType = cbRoomType.getSelectedItem().toString();
+            Room selectedRoom;
+            try {
+                selectedRoom = getAvailableRoom(roomType, inputPax, checkIn, checkOut);
+                if (selectedRoom == null) {
+                    showError("No available room for the selected type and dates.");
+                    return;
+                }
+            } catch (HotelException ex) {
+                showError("Database error: " + ex.getMessage());
+                ex.printStackTrace();
+                return;
+            }
+
+            // 4. Build Reservation object
+            Reservation reservation = new Reservation();
+            int guestId = SessionManager.getInstance().getGuestId();
+            if (guestId == 0) {
+                showError("Guest not logged in.");
+                return;
+            }
+            reservation.setGuestId(guestId);
+            reservation.setRoomId(selectedRoom.getRoomId());
+            reservation.setCheckInDate(checkIn);
+            reservation.setCheckOutDate(checkOut);
+            reservation.setNumberOfGuests(inputPax);
+            reservation.setNumberOfNights((int) numberOfNights);
+            reservation.setRoomRate(BigDecimal.valueOf(selectedRate));
+            reservation.setTotalPrice(BigDecimal.valueOf(selectedRate * numberOfNights));
+            reservation.setDiscountApplied(BigDecimal.ZERO);
+            reservation.setFinalTotal(BigDecimal.valueOf(finalTotal));
+            reservation.setReservationDate(LocalDate.now());
+            reservation.setReservationStatus("Confirmed");
+            reservation.setNotes("");
+
+            // 5. Create reservation
+            ReservationService resService = new ReservationService();
+            Reservation created;
+            try {
+                created = resService.createReservation(reservation);
+            } catch (HotelException ex) {
+                showError("Booking failed: " + ex.getMessage());
+                ex.printStackTrace();
+                return;
+            }
+
+            // 6. Process payment
+            Payment payment = new Payment();
+            payment.setReservationId(created.getReservationId());
+            payment.setPaymentAmount(BigDecimal.valueOf(finalTotal));
+            payment.setPaymentMethod(payMethod);
+            if (payMethod.equals("Credit Card")) {
+                String cardNum = txtCardNumber.getText().trim();
+                String last4 = cardNum.length() >= 4 ? cardNum.substring(cardNum.length() - 4) : cardNum;
+                payment.setPaymentTypeDetails("Card ending in " + last4);
+            } else if (payMethod.equals("E-Wallet")) {
+                payment.setPaymentTypeDetails(txtWalletPhone.getText().trim());
+            } else {
+                payment.setPaymentTypeDetails("Cash");
+            }
+            payment.setPaymentStatus("Completed");
+            payment.setTransactionId(UUID.randomUUID().toString());
+
+            PaymentService payService = new PaymentService();
+            try {
+                payService.processPayment(payment);
+            } catch (HotelException ex) {
+                showError("Payment failed: " + ex.getMessage());
+                ex.printStackTrace();
+                // Optionally cancel the reservation here
+                return;
+            }
+
+            // 7. Show receipt
+            double subtotal = selectedRate * numberOfNights;
+            double tax = subtotal * 0.12;
+            double serviceCostReceipt = 0;
+            StringBuilder serviceLines = new StringBuilder();
+            String[] svcNames  = {"Breakfast","Lunch","Dinner","Snacks","Cleaning","Pillow","Blanket","Mattress"};
+            double[] svcPricesR = {SVC_BREAKFAST, SVC_LUNCH, SVC_DINNER, SVC_SNACKS, SVC_CLEANING, SVC_PILLOW, SVC_BLANKET, SVC_MATTRESS};
+            for (int i = 0; i < svcQty.length; i++) {
+                if (svcQty[i] > 0) {
+                    double c = svcQty[i] * svcPricesR[i] * numberOfNights;
+                    serviceCostReceipt += c;
+                    serviceLines.append(String.format("  %-10s x%d: PHP %,.2f%n", svcNames[i], svcQty[i], c));
+                }
+            }
+
+            receiptOverlay.setVisible(true);
+            txtReceipt.setText(
+                "    --- HOTEL RESERVATION RECEIPT ---\n\n" +
+                "Room:      " + roomType + "\n" +
+                "Guests:    " + inputPax + "\n" +
+                "Check-in:  " + checkIn + "\n" +
+                "Check-out: " + checkOut + "\n" +
+                "Nights:    " + numberOfNights + "\n" +
+                "---------------------------------\n" +
+                String.format("Subtotal:  PHP %,.2f%n", subtotal) +
+                String.format("Tax (12%%): PHP %,.2f%n", tax) +
+                (serviceCostReceipt > 0 ? "----- Room Services -----\n" + serviceLines.toString() + String.format("Services:  PHP %,.2f%n", serviceCostReceipt) : "") +
+                String.format("TOTAL:     PHP %,.2f%n", finalTotal) +
+                "---------------------------------\n" +
+                "Method:    " + payMethod + "\n" +
+                (payMethod.equals("Cash") ? String.format("Cash:      PHP %,.2f%n", cashReceived) : "") +
+                (payMethod.equals("Cash") ? String.format("Change:    PHP %,.2f%n", changeAmount) : "") +
+                "---------------------------------\n" +
+                "STATUS:    SUCCESSFUL"
+            );
+        }
+
+        // ---- Close receipt ----
+        if (e.getSource() == btnCloseReceipt) {
+            receiptOverlay.setVisible(false);
+        }
+    }
+
+    // ========== HELPER: Get an available room for the given type, date, and pax ==========
+    private Room getAvailableRoom(String roomType, int minPax, LocalDate checkIn, LocalDate checkOut) throws HotelException {
+        RoomService roomService = new RoomService();
+        List<Room> available = roomService.getAvailableRoomsByTypeAndDate(roomType, minPax, checkIn, checkOut);
+        if (available.isEmpty()) return null;
+        return available.get(0); // pick the first available
+    }
 }

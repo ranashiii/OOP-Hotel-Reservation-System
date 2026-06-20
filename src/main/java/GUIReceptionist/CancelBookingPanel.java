@@ -8,6 +8,7 @@ import Services.ReservationService;
 import Services.RoomService;
 import Utilities.CurrencyUtil;
 import Utilities.HotelException;
+import GUIReceptionist.ViewReservationPanel;
 
 import java.awt.Color;
 import java.awt.Cursor;

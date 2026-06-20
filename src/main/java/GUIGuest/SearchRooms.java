@@ -1,11 +1,18 @@
 package GUIGuest;
 
+import Models.Room;
+import Services.RoomService;
+import Utilities.HotelException;
+import HotelReservationMainSystem.SessionManager;
+
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.time.*;
-import java.time.format.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class SearchRooms extends JFrame implements ActionListener {
 
@@ -16,9 +23,9 @@ public class SearchRooms extends JFrame implements ActionListener {
     private JTable roomTable;
     private DefaultTableModel model;
     private JScrollPane scrollPane;
-    private JPanel titleBar, filterBar, contentArea;
+    private JPanel contentArea;
 
-    SearchRooms() {
+    public SearchRooms() {
         setTitle("Hotel Guest System - Search Rooms");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,16 +56,14 @@ public class SearchRooms extends JFrame implements ActionListener {
         sidebar.add(makeSideBtn("View Reservations",  300, "Search Rooms", this, () -> openFrame(new ViewReservations())));
         sidebar.add(makeSideBtn("Cancel Reservation", 370, "Search Rooms", this, () -> openFrame(new CancelReservation())));
         sidebar.add(makeSideBtn("Guest Profile",      440, "Search Rooms", this, () -> openFrame(new GuestProfile())));
-        sidebar.add(makeSideBtn("Logout",             610, "Search Rooms", this, () -> {{
-            int c = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-            if (c == JOptionPane.YES_OPTION) {{
-                // TODO: DB CONNECT [LOGOUT] - SessionManager.clearSession()
-                // SessionManager.clearSession();
-                // new LoginFrame().setVisible(true);
+        sidebar.add(makeSideBtn("Logout",             610, "Search Rooms", this, () -> {
+            int c = JOptionPane.showConfirmDialog(SearchRooms.this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) {
+                SessionManager.getInstance().logout();
                 dispose();
-            }}
-        }}));
-
+                // new GUILogin.LoginFrame().setVisible(true);
+            }
+        }));
 
         // Content area
         contentArea = new JPanel(null);
@@ -66,7 +71,7 @@ public class SearchRooms extends JFrame implements ActionListener {
         contentArea.setBackground(Color.decode("#F5F5F5"));
         add(contentArea);
 
-        titleBar = new JPanel(null);
+        JPanel titleBar = new JPanel(null);
         titleBar.setBounds(0, 0, 950, 80);
         titleBar.setBackground(Color.decode("#222222"));
         contentArea.add(titleBar);
@@ -77,12 +82,12 @@ public class SearchRooms extends JFrame implements ActionListener {
         lblTitle.setForeground(Color.WHITE);
         titleBar.add(lblTitle);
 
-        filterBar = new JPanel(null);
+        JPanel filterBar = new JPanel(null);
         filterBar.setBounds(0, 80, 950, 70);
         filterBar.setBackground(Color.decode("#333333"));
         contentArea.add(filterBar);
 
-        lblDate = new JLabel("Check-in Date:");
+        lblDate = new JLabel("Check-in Date (YYYY-MM-DD):");
         lblDate.setBounds(15, 8, 200, 18);
         lblDate.setForeground(Color.WHITE);
         lblDate.setFont(new Font("Arial Black", Font.BOLD, 11));
@@ -141,44 +146,83 @@ public class SearchRooms extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnSearch) {
+            // Validate date
             String dateText = txtDate.getText().trim();
-            if (dateText.isEmpty()) { JOptionPane.showMessageDialog(this, "Error: Please enter a check-in date.", "Error", JOptionPane.ERROR_MESSAGE); return; }
-            if (dateText.length() != 10 || dateText.charAt(4) != '-' || dateText.charAt(7) != '-') { JOptionPane.showMessageDialog(this, "Error: Invalid date format. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE); return; }
-
-            LocalDate searchDate;
+            if (dateText.isEmpty()) {
+                showError("Please enter a check-in date.");
+                return;
+            }
+            LocalDate checkIn;
             try {
-                searchDate = LocalDate.parse(dateText, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                checkIn = LocalDate.parse(dateText, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Error: Invalid date. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE); return;
+                showError("Invalid date format. Use YYYY-MM-DD.");
+                return;
+            }
+            if (checkIn.isBefore(LocalDate.now())) {
+                showError("Check-in date cannot be in the past.");
+                return;
             }
 
-            if (searchDate.isBefore(LocalDate.now())) { JOptionPane.showMessageDialog(this, "Error: Check-in date cannot be in the past.", "Error", JOptionPane.ERROR_MESSAGE); return; }
-            if (cbType.getSelectedIndex() == 0) { JOptionPane.showMessageDialog(this, "Error: Please select a room type.", "Error", JOptionPane.ERROR_MESSAGE); return; }
+            // Room type
+            if (cbType.getSelectedIndex() == 0) {
+                showError("Please select a room type.");
+                return;
+            }
+            String roomType = cbType.getSelectedItem().toString();
 
+            // Pax
             String paxText = txtPax.getText().trim();
-            if (paxText.isEmpty()) { JOptionPane.showMessageDialog(this, "Error: Please specify the number of guests.", "Error", JOptionPane.ERROR_MESSAGE); return; }
-
+            if (paxText.isEmpty()) {
+                showError("Please specify number of guests.");
+                return;
+            }
             int guests;
-            try { guests = Integer.parseInt(paxText); }
-            catch (NumberFormatException ex) { JOptionPane.showMessageDialog(this, "Error: Please enter a valid number for Pax/Guests.", "Error", JOptionPane.ERROR_MESSAGE); return; }
+            try {
+                guests = Integer.parseInt(paxText);
+            } catch (NumberFormatException ex) {
+                showError("Please enter a valid number for guests.");
+                return;
+            }
+            if (guests < 1 || guests > 10) {
+                showError("Guests must be between 1 and 10.");
+                return;
+            }
 
-            if (guests <= 0) { JOptionPane.showMessageDialog(this, "Error: Number of guests must be at least 1.", "Error", JOptionPane.ERROR_MESSAGE); return; }
-            if (guests > 10) { JOptionPane.showMessageDialog(this, "Error: Maximum room capacity is 10 guests.", "Error", JOptionPane.ERROR_MESSAGE); return; }
+            // We search for a 1-night stay (check-in to check-in+1)
+            LocalDate checkOut = checkIn.plusDays(1);
 
-            // TODO: DB CONNECT [SEARCH ROOMS] - RoomDAO.searchAvailableRooms(roomType, guests, checkInDate)
-            // TABLE: rooms
-            // Query: SELECT room_id, floor, room_type, capacity, price_per_night FROM rooms
-            //        WHERE room_type = ? AND capacity >= ? AND status = 'Available'
-            //        AND room_id NOT IN (
-            //            SELECT room_id FROM reservations
-            //            WHERE check_in_date <= ? AND check_out_date >= ?
-            //            AND reservation_status != 'Cancelled'
-            //        )
-            // After query: model.setRowCount(0); then loop ResultSet → model.addRow(...)
-            System.out.println("All fields valid. Proceeding with RoomDAO search...");
+            try {
+                RoomService roomService = new RoomService();
+                List<Room> availableRooms = roomService.getAvailableRoomsByTypeAndDate(roomType, guests, checkIn, checkOut);
+
+                model.setRowCount(0);
+                if (availableRooms.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No rooms available for the selected criteria.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    for (Room r : availableRooms) {
+                        model.addRow(new Object[]{
+                            r.getRoomId(),
+                            r.getFloor(),
+                            r.getRoomType(),
+                            r.getCapacity() + " Pax",
+                            r.getCapacity(),
+                            String.format("PHP %,.2f", r.getPricePerNight())
+                        });
+                    }
+                }
+            } catch (HotelException ex) {
+                showError("Database error: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, "Error: " + msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    // ========== Sidebar helpers ==========
     private JButton makeSideBtn(String text, int y, String active, JFrame frame, Runnable action) {
         JButton btn = new JButton(text);
         btn.setBounds(0, y, 250, 50);
@@ -206,5 +250,4 @@ public class SearchRooms extends JFrame implements ActionListener {
         next.setVisible(true);
         dispose();
     }
-
 }

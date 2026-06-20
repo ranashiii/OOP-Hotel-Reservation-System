@@ -1,8 +1,17 @@
 package GUIGuest;
 
+import Models.Reservation;
+import Models.Room;
+import Services.ReservationService;
+import Services.RoomService;
+import Utilities.HotelException;
+import HotelReservationMainSystem.SessionManager;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 public class ViewReservations extends JFrame {
 
@@ -10,7 +19,7 @@ public class ViewReservations extends JFrame {
     private JScrollPane scrollPane;
     private JPanel contentArea;
 
-    ViewReservations() {
+    public ViewReservations() {
         setTitle("Hotel Guest System - View Reservations");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -41,15 +50,14 @@ public class ViewReservations extends JFrame {
         sidebar.add(makeSideBtn("View Reservations",  300, "View Reservations", this, () -> openFrame(new ViewReservations())));
         sidebar.add(makeSideBtn("Cancel Reservation", 370, "View Reservations", this, () -> openFrame(new CancelReservation())));
         sidebar.add(makeSideBtn("Guest Profile",      440, "View Reservations", this, () -> openFrame(new GuestProfile())));
-        sidebar.add(makeSideBtn("Logout",             610, "View Reservations", this, () -> {{
-            int c = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-            if (c == JOptionPane.YES_OPTION) {{
-                // TODO: DB CONNECT [LOGOUT] - SessionManager.clearSession()
-                // SessionManager.clearSession();
-                // new LoginFrame().setVisible(true);
+        sidebar.add(makeSideBtn("Logout",             610, "View Reservations", this, () -> {
+            int c = JOptionPane.showConfirmDialog(ViewReservations.this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) {
+                SessionManager.getInstance().logout();
                 dispose();
-            }}
-        }}));
+                // new GUILogin.LoginFrame().setVisible(true);
+            }
+        }));
 
         contentArea = new JPanel(null);
         contentArea.setBounds(250, 0, 950, 700);
@@ -67,18 +75,42 @@ public class ViewReservations extends JFrame {
         lblTitle.setForeground(Color.WHITE);
         titleBar.add(lblTitle);
 
+        // ========== LOAD DATA ==========
         String[] columns = {"ID", "Room", "Check In", "Check Out", "Status"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
 
-        // TODO: DB CONNECT [LOAD RESERVATIONS] - ReservationDAO.getReservationsByGuestId(guestId)
-        // TABLE: reservations JOIN rooms ON reservations.room_id = rooms.room_id
-        // Query: SELECT reservation_id, rooms.room_number, check_in_date, check_out_date, reservation_status
-        //        FROM reservations JOIN rooms ON reservations.room_id = rooms.room_id
-        //        WHERE guest_id = SessionManager.getCurrentGuestId()
-        //        ORDER BY check_in_date DESC
-        // After query: build Object[][] data from ResultSet and pass to JTable
-        Object[][] data = {};
+        try {
+            int guestId = SessionManager.getInstance().getGuestId();
+            if (guestId == 0) {
+                JOptionPane.showMessageDialog(this, "Please log in first.", "Error", JOptionPane.ERROR_MESSAGE);
+                dispose();
+                return;
+            }
 
-        resTable = new JTable(data, columns);
+            ReservationService resService = new ReservationService();
+            RoomService roomService = new RoomService();
+            List<Reservation> reservations = resService.getReservationsByGuestId(guestId);
+
+            for (Reservation r : reservations) {
+                Room room = roomService.getRoomById(r.getRoomId());
+                String roomNumber = (room != null) ? room.getRoomNumber() : "N/A";
+                model.addRow(new Object[]{
+                    r.getReservationId(),
+                    roomNumber,
+                    r.getCheckInDate(),
+                    r.getCheckOutDate(),
+                    r.getReservationStatus()
+                });
+            }
+        } catch (HotelException e) {
+            JOptionPane.showMessageDialog(this, "Error loading reservations: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+
+        resTable = new JTable(model);
         resTable.setFont(new Font("Arial", Font.PLAIN, 13));
         resTable.setRowHeight(28);
         resTable.getTableHeader().setBackground(Color.decode("#222222"));
@@ -91,6 +123,7 @@ public class ViewReservations extends JFrame {
         contentArea.add(scrollPane);
     }
 
+    // ========== Sidebar helpers ==========
     private JButton makeSideBtn(String text, int y, String active, JFrame frame, Runnable action) {
         JButton btn = new JButton(text);
         btn.setBounds(0, y, 250, 50);
@@ -118,5 +151,4 @@ public class ViewReservations extends JFrame {
         next.setVisible(true);
         dispose();
     }
-
 }

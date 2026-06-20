@@ -1,10 +1,12 @@
 package Services;
 
+import DAO.ReservationDAO;
 import DAO.RoomDAO;
 import Models.Room;
 import Utilities.HotelException;
 import Utilities.ValidationUtil;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +19,8 @@ import java.util.stream.Collectors;
  */
 public class RoomService {
     private RoomDAO roomDAO = new RoomDAO();
-    
+    private ReservationDAO reservationDAO = new ReservationDAO();   // added for availability checks
+
     /**
      * Add new room to inventory
      * 
@@ -147,7 +150,7 @@ public class RoomService {
     }
     
     /**
-     * Get available rooms
+     * Get available rooms (status = 'Available')
      * 
      * @return List of available Room objects
      * @throws HotelException if query fails
@@ -247,5 +250,40 @@ public class RoomService {
                 status.equals("Occupied") || 
                 status.equals("Maintenance") || 
                 status.equals("Cleaning"));
+    }
+
+    // =============================================================
+    //  NEW: Get available rooms by type, capacity, and date range
+    // =============================================================
+    /**
+     * Get rooms of a specific type that are available for the given dates
+     * and have capacity >= minCapacity.
+     *
+     * @param roomType    the room type (e.g., "Single Standard")
+     * @param minCapacity minimum number of guests
+     * @param checkIn     check-in date
+     * @param checkOut    check-out date
+     * @return list of rooms that satisfy all criteria
+     * @throws HotelException if database error occurs
+     */
+    public List<Room> getAvailableRoomsByTypeAndDate(String roomType, int minCapacity,
+                                                     LocalDate checkIn, LocalDate checkOut) throws HotelException {
+        // 1. Get all rooms of the given type
+        List<Room> allRooms = roomDAO.getRoomsByType(roomType);
+        if (allRooms.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 2. Filter by capacity and availability
+        return allRooms.stream()
+            .filter(r -> r.getCapacity() >= minCapacity)
+            .filter(r -> {
+                try {
+                    return reservationDAO.isRoomAvailable(r.getRoomId(), checkIn, checkOut);
+                } catch (HotelException e) {
+                    return false;
+                }
+            })
+            .collect(Collectors.toList());
     }
 }
